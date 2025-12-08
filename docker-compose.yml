@@ -1,0 +1,39 @@
+# Docker Compose with BuildKit optimizations
+# Run with: docker compose build (uses buildx by default in Docker 23+)
+
+services:
+  printer:
+    build:
+      context: .
+      dockerfile: apps/printer/Dockerfile
+      # BuildKit cache configuration
+      cache_from:
+        - type=local,src=/tmp/.buildx-cache
+      cache_to:
+        - type=local,dest=/tmp/.buildx-cache-new,mode=max
+    image: gpt_architecture/printer:latest
+
+  # Development service with live reload
+  printer-dev:
+    build:
+      context: .
+      dockerfile: apps/printer/Dockerfile
+      target: builder  # Use builder stage (has uv)
+    image: gpt_architecture/printer:dev
+    volumes:
+      # Mount source for live development
+      - ./libs/greeter/gpt_architecture:/app/libs/greeter/gpt_architecture:ro
+      - ./apps/printer/gpt_architecture:/app/apps/printer/gpt_architecture:ro
+    command: ["uv", "run", "python", "-c", "from gpt_architecture.printer import run; run()"]
+    develop:
+      watch:
+        - action: sync
+          path: ./libs/greeter/gpt_architecture
+          target: /app/libs/greeter/gpt_architecture
+          ignore:
+            - __pycache__/
+        - action: sync
+          path: ./apps/printer/gpt_architecture
+          target: /app/apps/printer/gpt_architecture
+          ignore:
+            - __pycache__/

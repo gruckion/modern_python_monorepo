@@ -1,26 +1,58 @@
-# syntax=docker/dockerfile:1
-FROM python:3.13-slim-bookworm
+# syntax=docker/dockerfile:1.7
+# Multi-stage build with BuildKit cache mounts for efficient builds
+# Reference: https://docs.astral.sh/uv/guides/integration/docker/
 
-ENV PYTHONUNBUFFERED=1
+# =============================================================================
+# Stage 1: Builder
+# =============================================================================
+FROM python:3.13-slim-bookworm AS builder
+
+# Pin uv version for reproducibility
+COPY --from=ghcr.io/astral-sh/uv:0.5.14 /uv /uvx /bin/
+
+# Configure uv for container builds
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never
+
 WORKDIR /app
 
-# Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-
-# Copy workspace files needed for dependency resolution
+# Copy workspace dependency files first (changes less frequently)
 COPY pyproject.toml uv.lock ./
 COPY libs/greeter/pyproject.toml libs/greeter/pyproject.toml
 COPY apps/printer/pyproject.toml apps/printer/pyproject.toml
 
-# Install dependencies (without the actual source yet for better caching)
-RUN uv sync --frozen --no-install-workspace
+# Install dependencies only (cached layer)
+# --mount=type=cache reuses uv's download cache across builds
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-workspace --no-dev
 
-# Copy source code
+# Copy source code (changes more frequently)
 COPY libs/greeter/gpt_architecture libs/greeter/gpt_architecture
 COPY apps/printer/gpt_architecture apps/printer/gpt_architecture
 
-# Install the workspace packages
-RUN uv sync --frozen
+# Install workspace packages (non-editable for production)
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --no-editable
+
+# =============================================================================
+# Stage 2: Runtime (minimal image)
+# =============================================================================
+FROM python:3.13-slim-bookworm AS runtime
+
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Copy only the virtual environment from builder (no uv, no source needed)
+COPY --from=builder /app/.venv /app/.venv
+
+# Add venv to PATH
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Run as non-root user for security
+RUN useradd --create-home --shell /bin/bash app
+USER app
 
 # Run the printer app
-CMD ["/app/.venv/bin/python", "-c", "from gpt_architecture.printer import run; run()"]
+CMD ["python", "-c", "from gpt_architecture.printer import run; run()"]
