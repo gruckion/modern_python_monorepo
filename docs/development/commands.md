@@ -159,13 +159,8 @@ This is the recommended command before committing changes.
 You can also run tools directly if needed:
 
 ```bash
-# Direct Ruff access
 uv run ruff format --check .
 uv run ruff check .
-
-# Direct pytest access
 uv run pytest -xvs apps/printer/tests/
-
-# Direct ty access
 uv run ty check libs/greeter/
 ```

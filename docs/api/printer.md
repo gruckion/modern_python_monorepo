@@ -41,17 +41,13 @@ printer.run()
 ### As a CLI
 
 ```bash
-# Run via uv in development
 uv run printer
-
-# Run directly after installation
 printer
 ```
 
 ### Via Docker
 
 ```bash
-# Build and run
 docker compose build printer
 docker compose up printer
 ```

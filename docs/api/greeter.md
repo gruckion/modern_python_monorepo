@@ -44,10 +44,7 @@ print(result)
 ### As a CLI
 
 ```bash
-# Run via uv in development
 uv run greeter
-
-# Run directly after installation
 greeter
 ```
 

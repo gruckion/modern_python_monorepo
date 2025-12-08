@@ -24,7 +24,6 @@ Create a branch for your changes:
 
 ```bash
 git checkout -b feature/your-feature-name
-# or
 git checkout -b fix/your-bug-fix
 ```
 

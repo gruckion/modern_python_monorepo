@@ -68,7 +68,7 @@ This runs formatting, linting, type checking, and tests in sequence.
 
 After cloning, you'll see this structure:
 
-```
+```text
 modern_python_monorepo/
 ├── pyproject.toml       # Workspace root configuration
 ├── uv.lock              # Locked dependencies
@@ -83,10 +83,7 @@ modern_python_monorepo/
 The monorepo includes an example `printer` application that uses the `greeter` library:
 
 ```bash
-# Run the printer app
 uv run printer
-
-# Or run the greeter directly
 uv run greeter
 ```
 

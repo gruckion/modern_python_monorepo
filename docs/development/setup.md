@@ -36,10 +36,7 @@ uv sync --all-packages
 Install git hooks to automatically run checks before commits:
 
 ```bash
-# Install prek globally (one-time)
 uv tool install prek
-
-# Install hooks in this repository
 uv run poe hooks
 ```
 
@@ -58,22 +55,11 @@ After this, every `git commit` will automatically run:
 ### Daily Workflow
 
 ```bash
-# 1. Make your changes to code
-
-# 2. Format and lint (with auto-fix)
 uv run poe fmt
 uv run poe lint
-
-# 3. Type check
 uv run poe check
-
-# 4. Run tests
 uv run poe test
-
-# 5. Or run everything at once
 uv run poe all
-
-# 6. Commit (hooks run automatically)
 git commit -m "Your message"
 ```
 
@@ -82,11 +68,11 @@ git commit -m "Your message"
 To add a dependency to a specific package:
 
 ```bash
-# Add to a library
 cd libs/greeter
 uv add some-package
+```
 
-# Add to an app
+```bash
 cd apps/printer
 uv add some-package
 ```
@@ -101,10 +87,7 @@ uv add greeter --editable
 ### Running Tests with Coverage
 
 ```bash
-# Run tests with coverage report
 uv run poe cov
-
-# View the coverage report
 open htmlcov/index.html  # macOS
 xdg-open htmlcov/index.html  # Linux
 ```
@@ -149,13 +132,8 @@ Create or update `.vscode/settings.json`:
 uv creates and manages a virtual environment in `.venv/`:
 
 ```bash
-# Activate manually (rarely needed, uv run handles this)
 source .venv/bin/activate
-
-# Deactivate
 deactivate
-
-# Check which Python is active
 which python
 ```
 
@@ -167,10 +145,7 @@ which python
 When `pyproject.toml` or `uv.lock` changes (e.g., after git pull):
 
 ```bash
-# Sync all packages
 uv sync --all-packages
-
-# Sync including docs dependencies
 uv sync --all-packages --group docs
 ```
 

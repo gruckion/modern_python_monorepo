@@ -16,17 +16,13 @@ The project includes Docker support with:
 ### Build and Run
 
 ```bash
-# Build the printer app image
 docker compose build printer
-
-# Run the container
 docker compose up printer
 ```
 
 ### Development with Live Reload
 
 ```bash
-# Start development container with file watching
 docker compose watch printer-dev
 ```
 
@@ -125,10 +121,7 @@ docker buildx bake
 ### Build Specific Target
 
 ```bash
-# Development build (single platform, faster)
 docker buildx bake printer-dev
-
-# CI build with caching
 docker buildx bake ci
 ```
 

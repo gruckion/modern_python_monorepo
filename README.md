@@ -66,7 +66,7 @@ uv run poe all            # Format, lint, typecheck, test
 | Testing | [**pytest**](https://docs.pytest.org/) | With doctest support |
 | Task runner | [**poethepoet**](https://poethepoet.naber.dev/) | Simple task definitions |
 | Git hooks | [**prek**](https://prek.j178.dev/) | Rust-based pre-commit (10x faster) |
-| Documentation | [**MkDocs**](https://www.mkdocs.org/) | Static site generator with Material theme |
+| Documentation | [**MkDocs**](https://www.mkdocs.org/) | Static site generator with [shadcn theme](https://github.com/asiffer/mkdocs-shadcn) |
 
 ---
 
@@ -132,7 +132,7 @@ uv run poe ci:lint  # Lint without fixes
 
 ## Documentation
 
-This project uses [MkDocs](https://www.mkdocs.org/) with the [Material](https://squidfunk.github.io/mkdocs-material/) theme for documentation, and [mkdocstrings](https://mkdocstrings.github.io/) for auto-generated API docs.
+This project uses [MkDocs](https://www.mkdocs.org/) with the [shadcn theme](https://github.com/asiffer/mkdocs-shadcn) for documentation, and [mkdocstrings](https://mkdocstrings.github.io/) for auto-generated API docs.
 
 ```bash
 # Install docs dependencies

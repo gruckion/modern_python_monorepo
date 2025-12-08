@@ -33,57 +33,15 @@ This is a production-ready monorepo template for Python projects that demonstrat
 
 ## Quick Navigation
 
-<div class="grid cards" markdown>
-
--   :material-rocket-launch:{ .lg .middle } **Getting Started**
-
-    ---
-
-    Get up and running with the monorepo in minutes
-
-    [:octicons-arrow-right-24: Quick start guide](getting-started.md)
-
--   :material-cog:{ .lg .middle } **Development**
-
-    ---
-
-    Learn about development workflows and available commands
-
-    [:octicons-arrow-right-24: Development guide](development/setup.md)
-
--   :material-docker:{ .lg .middle } **Docker**
-
-    ---
-
-    Build and run containers for production and development
-
-    [:octicons-arrow-right-24: Docker guide](development/docker.md)
-
--   :material-file-tree:{ .lg .middle } **Architecture**
-
-    ---
-
-    Understand the monorepo structure and design decisions
-
-    [:octicons-arrow-right-24: Architecture overview](architecture/overview.md)
-
--   :material-api:{ .lg .middle } **API Reference**
-
-    ---
-
-    Auto-generated API documentation from source code
-
-    [:octicons-arrow-right-24: API docs](api/index.md)
-
--   :material-account-group:{ .lg .middle } **Contributing**
-
-    ---
-
-    Guidelines for contributing to the project
-
-    [:octicons-arrow-right-24: Contributing guide](contributing.md)
-
-</div>
+| Section | Description |
+|---------|-------------|
+| [**Getting Started**](getting-started.md) | Get up and running with the monorepo in minutes |
+| [**Development Setup**](development/setup.md) | Learn about development workflows and environment |
+| [**Commands Reference**](development/commands.md) | All available poe tasks and commands |
+| [**Docker Guide**](development/docker.md) | Build and run containers for production and development |
+| [**Architecture**](architecture/overview.md) | Understand the monorepo structure and design decisions |
+| [**API Reference**](api/index.md) | Auto-generated API documentation from source code |
+| [**Contributing**](contributing.md) | Guidelines for contributing to the project |
 
 ## Why This Stack?
 

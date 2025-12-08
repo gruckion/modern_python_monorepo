@@ -4,7 +4,7 @@ This document explains the architecture and design decisions of the Modern Pytho
 
 ## Monorepo Structure
 
-```
+```text
 modern_python_monorepo/
 ├── pyproject.toml           # Workspace root + all tool configs
 ├── uv.lock                  # Single lockfile for entire workspace
@@ -90,37 +90,29 @@ When building a wheel for `printer`, Una automatically bundles the `greeter` dep
 
 ## Dependency Flow
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     External PyPI Packages                   │
-└─────────────────────────────────────────────────────────────┘
-                              ▲
-                              │ depends on
-                              │
-┌─────────────────────────────────────────────────────────────┐
-│                          libs/                               │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │  greeter                                             │    │
-│  │  - cowsay-python (external)                         │    │
-│  └─────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-                              ▲
-                              │ depends on
-                              │
-┌─────────────────────────────────────────────────────────────┐
-│                          apps/                               │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │  printer                                             │    │
-│  │  - greeter (workspace)                              │    │
-│  └─────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart BT
+    subgraph external["External PyPI Packages"]
+        cowsay["cowsay-python"]
+    end
+
+    subgraph libs["libs/"]
+        greeter["greeter"]
+    end
+
+    subgraph apps["apps/"]
+        printer["printer"]
+    end
+
+    greeter -->|depends on| cowsay
+    printer -->|depends on| greeter
 ```
 
 ## Package Structure
 
 Each package follows this structure:
 
-```
+```text
 package_name/
 ├── pyproject.toml                    # Package metadata and dependencies
 ├── modern_python_monorepo/           # Namespace directory
@@ -192,15 +184,15 @@ omit = ["*/tests/*", "*/__pycache__/*"]
 
 The GitHub Actions workflow (`.github/workflows/pr.yml`) runs on every PR:
 
-```
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│   Checkout  │───▶│  Setup uv   │───▶│ Install deps│───▶│ Check lock  │
-└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
-                                                                │
-                                                                ▼
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│   Codecov   │◀───│  Tests+Cov  │◀───│  Type check │◀───│ prek hooks  │
-└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+```mermaid
+flowchart LR
+    A[Checkout] --> B[Setup uv]
+    B --> C[Install deps]
+    C --> D[Check lock]
+    D --> E[prek hooks]
+    E --> F[Type check]
+    F --> G[Tests + Cov]
+    G --> H[Codecov]
 ```
 
 ## Design Decisions
