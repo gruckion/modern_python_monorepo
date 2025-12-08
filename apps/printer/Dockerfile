@@ -28,8 +28,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-install-workspace --no-dev
 
 # Copy source code (changes more frequently)
-COPY libs/greeter/gpt_architecture libs/greeter/gpt_architecture
-COPY apps/printer/gpt_architecture apps/printer/gpt_architecture
+COPY libs/greeter/modern_python_monorepo libs/greeter/modern_python_monorepo
+COPY apps/printer/modern_python_monorepo apps/printer/modern_python_monorepo
 
 # Install workspace packages (non-editable for production)
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -57,7 +57,7 @@ USER app
 
 # Health check verifies Python environment is functional
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "from gpt_architecture.printer import run" || exit 1
+    CMD python -c "from modern_python_monorepo.printer import run" || exit 1
 
 # Run the printer app
-CMD ["python", "-c", "from gpt_architecture.printer import run; run()"]
+CMD ["python", "-c", "from modern_python_monorepo.printer import run; run()"]

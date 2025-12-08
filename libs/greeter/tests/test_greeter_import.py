@@ -1,4 +1,4 @@
-from gpt_architecture import greeter
+from modern_python_monorepo import greeter
 
 
 def test_import():

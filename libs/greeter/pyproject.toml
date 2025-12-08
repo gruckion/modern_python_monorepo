@@ -8,7 +8,7 @@ requires-python = ">=3.13"
 dynamic = ["una"]  # needed for hatch-una metadata hook to work
 
 [project.scripts]
-greeter = "gpt_architecture.greeter:main"
+greeter = "modern_python_monorepo.greeter:main"
 
 [build-system]
 requires = ["hatchling", "hatch-una"]

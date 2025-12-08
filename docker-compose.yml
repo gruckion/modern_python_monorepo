@@ -11,7 +11,7 @@ services:
         - type=local,src=/tmp/.buildx-cache
       cache_to:
         - type=local,dest=/tmp/.buildx-cache-new,mode=max
-    image: gpt_architecture/printer:latest
+    image: modern_python_monorepo/printer:latest
 
   # Development service with live reload
   printer-dev:
@@ -19,21 +19,21 @@ services:
       context: .
       dockerfile: apps/printer/Dockerfile
       target: builder  # Use builder stage (has uv)
-    image: gpt_architecture/printer:dev
+    image: modern_python_monorepo/printer:dev
     volumes:
       # Mount source for live development
-      - ./libs/greeter/gpt_architecture:/app/libs/greeter/gpt_architecture:ro
-      - ./apps/printer/gpt_architecture:/app/apps/printer/gpt_architecture:ro
-    command: ["uv", "run", "python", "-c", "from gpt_architecture.printer import run; run()"]
+      - ./libs/greeter/modern_python_monorepo:/app/libs/greeter/modern_python_monorepo:ro
+      - ./apps/printer/modern_python_monorepo:/app/apps/printer/modern_python_monorepo:ro
+    command: ["uv", "run", "python", "-c", "from modern_python_monorepo.printer import run; run()"]
     develop:
       watch:
         - action: sync
-          path: ./libs/greeter/gpt_architecture
-          target: /app/libs/greeter/gpt_architecture
+          path: ./libs/greeter/modern_python_monorepo
+          target: /app/libs/greeter/modern_python_monorepo
           ignore:
             - __pycache__/
         - action: sync
-          path: ./apps/printer/gpt_architecture
-          target: /app/apps/printer/gpt_architecture
+          path: ./apps/printer/modern_python_monorepo
+          target: /app/apps/printer/modern_python_monorepo
           ignore:
             - __pycache__/

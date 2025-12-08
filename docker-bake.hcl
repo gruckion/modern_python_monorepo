@@ -18,7 +18,7 @@ group "default" {
 target "printer" {
   context    = "."
   dockerfile = "apps/printer/Dockerfile"
-  tags       = ["${REGISTRY}/gpt_architecture-printer:${TAG}"]
+  tags       = ["${REGISTRY}/modern_python_monorepo-printer:${TAG}"]
   platforms  = ["linux/amd64", "linux/arm64"]
   cache-from = ["type=gha"]
   cache-to   = ["type=gha,mode=max"]
@@ -28,7 +28,7 @@ target "printer" {
 target "printer-dev" {
   inherits = ["printer"]
   target   = "builder"
-  tags     = ["gpt_architecture/printer:dev"]
+  tags     = ["modern_python_monorepo/printer:dev"]
   platforms = ["linux/amd64"]  // Single platform for speed
 }
 
@@ -37,10 +37,10 @@ target "ci" {
   inherits = ["printer"]
   cache-from = [
     "type=gha",
-    "type=registry,ref=${REGISTRY}/gpt_architecture-printer:cache"
+    "type=registry,ref=${REGISTRY}/modern_python_monorepo-printer:cache"
   ]
   cache-to = [
     "type=gha,mode=max",
-    "type=registry,ref=${REGISTRY}/gpt_architecture-printer:cache,mode=max"
+    "type=registry,ref=${REGISTRY}/modern_python_monorepo-printer:cache,mode=max"
   ]
 }

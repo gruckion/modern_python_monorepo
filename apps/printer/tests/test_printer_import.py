@@ -1,4 +1,4 @@
-from gpt_architecture import printer
+from modern_python_monorepo import printer
 
 
 def test_import():

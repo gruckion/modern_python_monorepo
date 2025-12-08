@@ -1,17 +1,18 @@
-# GPT Architecture – Neural Architecture Experiments (uv + Una + MPS)
+# Modern Python Monorepo
 
-[![CI](https://github.com/gruckion/gpt_architecture/actions/workflows/pr.yml/badge.svg)](https://github.com/gruckion/gpt_architecture/actions/workflows/pr.yml)
-[![codecov](https://codecov.io/gh/gruckion/gpt_architecture/branch/main/graph/badge.svg)](https://codecov.io/gh/gruckion/gpt_architecture)
+[![CI](https://github.com/gruckion/modern_python_monorepo/actions/workflows/pr.yml/badge.svg)](https://github.com/gruckion/modern_python_monorepo/actions/workflows/pr.yml)
+[![codecov](https://codecov.io/gh/gruckion/modern_python_monorepo/branch/main/graph/badge.svg)](https://codecov.io/gh/gruckion/modern_python_monorepo)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A **uv + Una** Python monorepo for experimenting with neural network architectures on Apple Silicon (M2/M3, MPS backend).
+A **uv + Una** Python monorepo template with best practices for modern Python development.
 
 Designed for:
 
-- Fast iteration on new model architectures
 - Clean separation between reusable libraries and runnable apps
 - Reproducible builds via Python wheels
-- Local training on MPS with PyTorch
+- Fast development with Ruff, ty, pytest, and poethepoet
+- Docker support with multi-platform builds
+- CI/CD with GitHub Actions and PyPI publishing
 
 ---
 
@@ -23,7 +24,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Clone and setup
 git clone <repo-url>
-cd gpt_architecture
+cd modern_python_monorepo
 uv sync --all-packages    # Install all deps + workspace packages
 
 # Verify setup
@@ -57,7 +58,6 @@ uv run poe all            # Format, lint, typecheck, test
 | Testing | **pytest** | With doctest support |
 | Task runner | **poethepoet** | Simple task definitions |
 | Pre-commit | **pre-commit** | Git hooks for code quality |
-| ML Framework | **PyTorch** | MPS backend for Apple Silicon |
 
 ---
 
@@ -75,24 +75,24 @@ uv run poe all            # Format, lint, typecheck, test
 │   └── printer/
 │       ├── pyproject.toml
 │       ├── Dockerfile
-│       └── gpt_architecture/
+│       └── modern_python_monorepo/
 │           └── printer/
 │               ├── __init__.py
 │               └── py.typed
 └── libs/                    # Reusable libraries
     └── greeter/
         ├── pyproject.toml
-        └── gpt_architecture/
+        └── modern_python_monorepo/
             └── greeter/
                 ├── __init__.py
                 └── py.typed
 ```
 
-**Note:** All packages use the `gpt_architecture` namespace for consistent imports:
+**Note:** All packages use the `modern_python_monorepo` namespace for consistent imports:
 
 ```python
-from gpt_architecture import greeter
-from gpt_architecture import printer
+from modern_python_monorepo import greeter
+from modern_python_monorepo import printer
 ```
 
 ---
@@ -231,7 +231,7 @@ Before the first release, configure PyPI to trust this repository:
 2. Add a pending publisher for each package:
    - **PyPI Project Name**: `greeter` or `printer`
    - **Owner**: Your GitHub username/org
-   - **Repository**: `gpt_architecture`
+   - **Repository**: `modern_python_monorepo`
    - **Workflow name**: `release.yml`
    - **Environment**: `pypi`
 
@@ -281,10 +281,10 @@ After installing the packages, these CLI commands are available:
 
 ```bash
 # Create structure
-mkdir -p libs/mylib/gpt_architecture/mylib
-touch libs/mylib/gpt_architecture/mylib/__init__.py
-touch libs/mylib/gpt_architecture/mylib/py.typed
-touch libs/mylib/gpt_architecture/py.typed
+mkdir -p libs/mylib/modern_python_monorepo/mylib
+touch libs/mylib/modern_python_monorepo/mylib/__init__.py
+touch libs/mylib/modern_python_monorepo/mylib/py.typed
+touch libs/mylib/modern_python_monorepo/py.typed
 
 # Create pyproject.toml (copy from libs/greeter and modify)
 cp libs/greeter/pyproject.toml libs/mylib/pyproject.toml
