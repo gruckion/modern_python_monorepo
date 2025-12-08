@@ -66,6 +66,7 @@ uv run poe all            # Format, lint, typecheck, test
 | Testing | [**pytest**](https://docs.pytest.org/) | With doctest support |
 | Task runner | [**poethepoet**](https://poethepoet.naber.dev/) | Simple task definitions |
 | Git hooks | [**prek**](https://prek.j178.dev/) | Rust-based pre-commit (10x faster) |
+| Documentation | [**MkDocs**](https://www.mkdocs.org/) | Static site generator with Material theme |
 
 ---
 
@@ -75,10 +76,12 @@ uv run poe all            # Format, lint, typecheck, test
 .
 ├── pyproject.toml           # Workspace root + all tool configs
 ├── uv.lock                  # Lockfile (committed)
+├── mkdocs.yml               # Documentation configuration
 ├── docker-compose.yml       # Container orchestration
 ├── docker-bake.hcl          # Multi-platform builds
 ├── .github/workflows/       # CI/CD
 │   └── pr.yml
+├── docs/                    # Documentation source (MkDocs)
 ├── apps/                    # Runnable applications
 │   └── printer/
 │       ├── pyproject.toml
@@ -124,6 +127,25 @@ uv run poe all      # fmt → lint → check → test
 uv run poe ci:fmt   # Check formatting only
 uv run poe ci:lint  # Lint without fixes
 ```
+
+---
+
+## Documentation
+
+This project uses [MkDocs](https://www.mkdocs.org/) with the [Material](https://squidfunk.github.io/mkdocs-material/) theme for documentation, and [mkdocstrings](https://mkdocstrings.github.io/) for auto-generated API docs.
+
+```bash
+# Install docs dependencies
+uv sync --group docs
+
+# Start local docs server (http://127.0.0.1:8000)
+uv run poe docs
+
+# Build static site to site/
+uv run poe docs:build
+```
+
+Documentation source files are in `docs/` and configuration is in `mkdocs.yml`.
 
 ---
 
