@@ -5,7 +5,7 @@ description = ""
 authors = []
 dependencies = ["greeter"]
 requires-python = ">=3.13"
-dynamic = ["una"]  # needed for hatch-una metadata hook to work
+dynamic = ["una"]          # needed for hatch-una metadata hook to work
 
 [project.scripts]
 printer = "modern_python_monorepo.printer:run"
