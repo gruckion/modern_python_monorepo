@@ -1,0 +1,99 @@
+# {{ project_name }}
+
+{{ project_description }}
+
+## Features
+
+- **Modern Python**: Requires Python {{ python_requires }}
+- **Fast Package Management**: Uses [uv](https://docs.astral.sh/uv/) for dependency management
+- **Monorepo Structure**: Clean separation between `libs/` (reusable) and `apps/` (runnable)
+{% if with_ruff %}
+- **Linting & Formatting**: [Ruff](https://docs.astral.sh/ruff/) for fast, comprehensive code quality
+{% endif %}
+{% if with_ty %}
+- **Type Checking**: [ty](https://github.com/astral-sh/ty) for type safety
+{% endif %}
+{% if with_pytest %}
+- **Testing**: [pytest](https://docs.pytest.org/) with coverage reporting
+{% endif %}
+{% if with_pre_commit %}
+- **Git Hooks**: Pre-commit hooks for code quality enforcement
+{% endif %}
+{% if with_docker %}
+- **Docker**: Multi-stage builds with BuildKit optimizations
+{% endif %}
+{% if with_github_actions %}
+- **CI/CD**: GitHub Actions for automated testing
+{% endif %}
+{% if with_docs %}
+- **Documentation**: MkDocs with auto-generated API docs
+{% endif %}
+
+## Getting Started
+
+### Prerequisites
+
+- Python {{ python_requires }}
+- [uv](https://docs.astral.sh/uv/) package manager
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/{{ github_owner }}/{{ github_repo }}.git
+cd {{ project_slug }}
+
+# Install dependencies
+uv sync --all-packages
+```
+
+{% if with_poethepoet %}
+## Development Commands
+
+All commands use `uv run poe <task>`:
+
+```bash
+{% if with_ruff %}
+uv run poe fmt      # Format code
+uv run poe lint     # Lint with auto-fix
+{% endif %}
+{% if with_ty %}
+uv run poe check    # Type check
+{% endif %}
+{% if with_pytest %}
+uv run poe test     # Run tests
+uv run poe cov      # Tests with coverage
+{% endif %}
+{% if with_ruff and with_ty and with_pytest %}
+uv run poe all      # Run all checks
+{% endif %}
+{% if with_pre_commit %}
+
+# Git hooks
+uv run poe hooks    # Install git hooks
+{% endif %}
+{% if with_docs %}
+
+# Documentation
+uv run poe docs     # Serve docs locally
+{% endif %}
+```
+{% endif %}
+
+## Project Structure
+
+```
+{{ project_slug }}/
+├── pyproject.toml          # Workspace root configuration
+├── uv.lock                 # Locked dependencies
+├── apps/                   # Application packages
+│   └── ...
+└── libs/                   # Library packages
+    └── ...
+```
+
+{% if license_type != "none" %}
+## License
+
+This project is licensed under the {{ license_type }} License - see the [LICENSE](LICENSE) file for details.
+{% endif %}

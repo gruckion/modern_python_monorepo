@@ -1,0 +1,59 @@
+# PR Checks - Runs on all pull requests and pushes to main
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.5.14"
+
+      - name: Set up Python
+        run: uv python install {{ python_version }}
+
+      - name: Install dependencies
+        run: uv sync --all-packages
+
+      - name: Verify lockfile is up-to-date
+        run: uv lock --check
+
+{% if with_pre_commit %}
+      - name: Run pre-commit hooks
+        run: uv run poe hooks:run
+{% endif %}
+
+{% if with_ruff %}
+      - name: Check formatting
+        run: uv run poe ci:fmt
+
+      - name: Lint
+        run: uv run poe ci:lint
+{% endif %}
+
+{% if with_ty %}
+      - name: Type check
+        run: uv run poe check
+{% endif %}
+
+{% if with_pytest %}
+      - name: Run tests
+        run: uv run poe cov
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+{% endif %}

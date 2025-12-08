@@ -1,0 +1,23 @@
+# Docker Compose configuration for {{ project_name }}
+# Usage: docker compose up
+
+services:
+{% if with_samples %}
+  printer:
+    build:
+      context: .
+      dockerfile: apps/printer/Dockerfile
+    container_name: {{ project_slug }}-printer
+    restart: unless-stopped
+{% endif %}
+
+# Add your services here
+# Example:
+#   api:
+#     build:
+#       context: .
+#       dockerfile: apps/api/Dockerfile
+#     ports:
+#       - "8000:8000"
+#     environment:
+#       - DEBUG=false

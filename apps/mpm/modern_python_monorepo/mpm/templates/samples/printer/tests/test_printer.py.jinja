@@ -1,0 +1,15 @@
+"""Tests for the printer module."""
+
+
+def test_main_exists() -> None:
+    """Test that main function exists."""
+    from {{ namespace }}.printer import main
+
+    assert callable(main)
+
+
+def test_run_exists() -> None:
+    """Test that run function exists."""
+    from {{ namespace }}.printer import run
+
+    assert callable(run)

@@ -1,0 +1,15 @@
+"""Test that {{ project_name }} can be imported."""
+
+
+def test_import() -> None:
+    """Test that the package can be imported."""
+    from {{ namespace }} import main
+
+    assert main is not None
+
+
+def test_version() -> None:
+    """Test that version is defined."""
+    from {{ namespace }} import __version__
+
+    assert __version__ == "0.1.0"

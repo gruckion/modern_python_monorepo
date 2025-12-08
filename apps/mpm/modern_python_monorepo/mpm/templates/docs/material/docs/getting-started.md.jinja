@@ -1,0 +1,35 @@
+# Getting Started
+
+## Prerequisites
+
+- Python {{ python_requires }}
+- [uv](https://docs.astral.sh/uv/) package manager
+
+## Installation
+
+### From Source
+
+```bash
+# Clone the repository
+git clone https://github.com/{{ github_owner }}/{{ github_repo }}.git
+cd {{ project_slug }}
+
+# Install all dependencies
+uv sync --all-packages
+```
+
+## Verify Installation
+
+```bash
+# Run the test suite
+uv run poe test
+
+# Run all checks (format, lint, type-check, test)
+uv run poe all
+```
+
+## Next Steps
+
+- [Development Setup](development/setup.md) - Configure your development environment
+- [Available Commands](development/commands.md) - Learn about available commands
+- [Architecture Overview](architecture/overview.md) - Understand the project structure

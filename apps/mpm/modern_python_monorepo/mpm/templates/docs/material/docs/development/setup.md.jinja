@@ -1,0 +1,50 @@
+# Development Setup
+
+## Prerequisites
+
+- Python {{ python_requires }}
+- [uv](https://docs.astral.sh/uv/) package manager
+- Git
+
+## Clone and Install
+
+```bash
+git clone https://github.com/{{ github_owner }}/{{ github_repo }}.git
+cd {{ project_slug }}
+uv sync --all-packages
+```
+
+{% if with_pre_commit %}
+## Install Git Hooks
+
+```bash
+uv run poe hooks
+```
+
+This installs pre-commit hooks that automatically run on each commit to ensure code quality.
+{% endif %}
+
+## IDE Setup
+
+### VS Code
+
+Install recommended extensions:
+
+- Python
+- Ruff
+- Even Better TOML
+
+### PyCharm
+
+1. Set the Python interpreter to the virtual environment in `.venv/`
+2. Enable Ruff integration in Settings → Tools → Ruff
+
+## Environment Variables
+
+Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+Configure any required environment variables for your development needs.

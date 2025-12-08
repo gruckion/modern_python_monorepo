@@ -1,0 +1,9 @@
+"""Test that {{ package_name }} can be imported."""
+
+
+def test_import() -> None:
+    """Test that the package can be imported."""
+    from {{ namespace }}.{{ package_name }} import main, run
+
+    assert main is not None
+    assert run is not None

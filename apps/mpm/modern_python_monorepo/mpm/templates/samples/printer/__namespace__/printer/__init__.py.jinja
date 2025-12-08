@@ -1,0 +1,22 @@
+"""Printer - Sample application using the greeter library.
+
+This module demonstrates how an application can depend on
+a library within the same monorepo.
+"""
+
+from {{ namespace }}.greeter import greet
+
+
+def main() -> None:
+    """Main function that prints a greeting."""
+    message = greet("Hello from printer app!")
+    print(message)
+
+
+def run() -> None:
+    """CLI entry point for printer."""
+    main()
+
+
+if __name__ == "__main__":
+    run()

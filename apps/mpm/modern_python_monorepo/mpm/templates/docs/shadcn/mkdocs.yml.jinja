@@ -1,0 +1,45 @@
+site_name: {{ project_name }}
+site_description: {{ project_description }}
+{% if github_owner %}
+site_url: https://{{ github_owner }}.github.io/{{ github_repo }}
+repo_url: https://github.com/{{ github_owner }}/{{ github_repo }}
+repo_name: {{ github_owner }}/{{ github_repo }}
+{% endif %}
+
+theme:
+  name: shadcn
+  custom_dir: docs/overrides
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: true
+            show_root_heading: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Development:
+      - Setup: development/setup.md
+      - Commands: development/commands.md
+{% if with_docker %}
+      - Docker: development/docker.md
+{% endif %}
+  - Architecture: architecture/overview.md
+  - API Reference:
+      - Overview: api/index.md
+  - Contributing: contributing.md

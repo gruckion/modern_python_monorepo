@@ -1,0 +1,32 @@
+"""Greeter - Sample greeting library with ASCII art.
+
+This module demonstrates a simple library that can be imported
+by other packages in the monorepo.
+"""
+
+from cowsay import cow
+
+
+def greet(message: str = "Hello, World!") -> str:
+    """Generate a greeting message with ASCII art.
+
+    Args:
+        message: The message to display. Defaults to "Hello, World!".
+
+    Returns:
+        ASCII art string with the greeting message.
+
+    Example:
+        >>> from {{ namespace }}.greeter import greet
+        >>> print(greet("Hi!"))  # doctest: +SKIP
+    """
+    return cow(message)
+
+
+def main() -> None:
+    """CLI entry point for greeter."""
+    print(greet("Hello from greeter!"))
+
+
+if __name__ == "__main__":
+    main()

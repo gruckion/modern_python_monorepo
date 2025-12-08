@@ -1,0 +1,25 @@
+"""Tests for the greeter module."""
+
+
+def test_greet_returns_string() -> None:
+    """Test that greet returns a string."""
+    from {{ namespace }}.greeter import greet
+
+    result = greet("Test")
+    assert isinstance(result, str)
+    assert "Test" in result
+
+
+def test_greet_default_message() -> None:
+    """Test greet with default message."""
+    from {{ namespace }}.greeter import greet
+
+    result = greet()
+    assert "Hello, World!" in result
+
+
+def test_main_exists() -> None:
+    """Test that main function exists."""
+    from {{ namespace }}.greeter import main
+
+    assert callable(main)

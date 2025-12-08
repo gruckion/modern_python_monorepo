@@ -1,0 +1,29 @@
+[project]
+name = "printer"
+version = "0.1.0"
+description = "Sample application that uses the greeter library"
+authors = []
+dependencies = ["greeter"]
+requires-python = "{{ python_requires }}"
+dynamic = ["una"]          # needed for hatch-una metadata hook to work
+
+[project.scripts]
+printer = "{{ namespace }}.printer:run"
+
+[build-system]
+requires = ["hatchling", "hatch-una"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.uv]
+dev-dependencies = []
+
+[tool.uv.sources]
+
+[tool.uv.sources.greeter]
+workspace = true
+
+[tool.hatch.build.hooks.una-build]
+[tool.hatch.metadata.hooks.una-meta]

@@ -1,0 +1,44 @@
+# {{ project_name }}
+
+{{ project_description }}
+
+## Features
+
+- **Modern Python**: Requires Python {{ python_requires }}
+- **Fast Package Management**: Uses [uv](https://docs.astral.sh/uv/) for dependency management
+{% if with_ruff %}
+- **Linting & Formatting**: [Ruff](https://docs.astral.sh/ruff/) for fast, comprehensive code quality
+{% endif %}
+{% if with_ty %}
+- **Type Checking**: [ty](https://github.com/astral-sh/ty) for type safety
+{% endif %}
+{% if with_pytest %}
+- **Testing**: [pytest](https://docs.pytest.org/) with coverage reporting
+{% endif %}
+{% if with_docker %}
+- **Docker**: Multi-stage builds with BuildKit optimizations
+{% endif %}
+{% if with_github_actions %}
+- **CI/CD**: GitHub Actions for automated testing
+{% endif %}
+
+## Quick Start
+
+```bash
+# Clone and install
+git clone https://github.com/{{ github_owner }}/{{ github_repo }}.git
+cd {{ project_slug }}
+uv sync --all-packages
+
+# Run checks
+uv run poe all
+```
+
+## Project Structure
+
+```
+{{ project_slug }}/
+├── pyproject.toml          # Workspace root configuration
+├── apps/                   # Application packages
+└── libs/                   # Library packages
+```

@@ -1,0 +1,37 @@
+# Docker Bake configuration for multi-platform builds
+# Usage: docker buildx bake
+
+variable "TAG" {
+  default = "latest"
+}
+
+variable "REGISTRY" {
+  default = ""
+}
+
+group "default" {
+  targets = [{% if with_samples %}"printer"{% endif %}]
+}
+
+{% if with_samples %}
+target "printer" {
+  context = "."
+  dockerfile = "apps/printer/Dockerfile"
+  tags = [
+    "${REGISTRY}{{ project_slug }}/printer:${TAG}",
+    "${REGISTRY}{{ project_slug }}/printer:latest"
+  ]
+  platforms = ["linux/amd64", "linux/arm64"]
+  cache-from = ["type=gha"]
+  cache-to = ["type=gha,mode=max"]
+}
+{% endif %}
+
+# Add targets for additional apps here
+# Example:
+# target "api" {
+#   context = "."
+#   dockerfile = "apps/api/Dockerfile"
+#   tags = ["${REGISTRY}{{ project_slug }}/api:${TAG}"]
+#   platforms = ["linux/amd64", "linux/arm64"]
+# }

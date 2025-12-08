@@ -1,0 +1,151 @@
+[project]
+name = "{{ project_name }}"
+version = "0.1.0"
+description = "{{ project_description }}"
+readme = "README.md"
+requires-python = "{{ python_requires }}"
+dependencies = []
+{% if license_type != "none" %}
+license = { text = "{{ license_type }}" }
+{% endif %}
+{% if author_name or author_email %}
+
+authors = [
+{% if author_name and author_email %}
+    { name = "{{ author_name }}", email = "{{ author_email }}" },
+{% elif author_name %}
+    { name = "{{ author_name }}" },
+{% elif author_email %}
+    { email = "{{ author_email }}" },
+{% endif %}
+]
+{% endif %}
+
+[dependency-groups]
+dev = [
+    "una>=0.7.0",
+{% if with_ruff %}
+    "ruff>=0.8.0",
+{% endif %}
+{% if with_ty %}
+    "ty>=0.0.1a6",
+{% endif %}
+{% if with_pytest %}
+    "pytest>=8.0.0",
+    "pytest-cov>=6.0.0",
+{% endif %}
+{% if with_poethepoet %}
+    "poethepoet>=0.31.0",
+{% endif %}
+]
+{% if with_docs %}
+docs = [
+    "mkdocs>=1.6.0",
+{% if docs_theme == "material" %}
+    "mkdocs-material>=9.0.0",
+{% else %}
+    "mkdocs-shadcn>=0.9.0",
+{% endif %}
+    "mkdocstrings[python]>=0.27.0",
+    "pymdown-extensions>=10.0.0",
+]
+{% endif %}
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["apps/*", "libs/*"]
+
+[tool.una]
+namespace = "{{ namespace }}"
+requires-python = "{{ python_requires }}"
+
+{% if with_ruff %}
+# =============================================================================
+# Ruff - Linting & Formatting
+# =============================================================================
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "A",      # flake8-builtins (shadow built-ins)
+    "B",      # flake8-bugbear (common bugs)
+    "E",      # pycodestyle errors
+    "F",      # pyflakes
+    "I",      # isort (import sorting)
+    "N",      # pep8-naming
+    "UP",     # pyupgrade (modern syntax)
+    "W",      # pycodestyle warnings
+    "RUF",    # Ruff-specific rules
+    "T100",   # debugger breakpoints
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["{{ namespace }}"]
+{% endif %}
+
+{% if with_pytest %}
+# =============================================================================
+# Pytest - Testing
+# =============================================================================
+[tool.pytest.ini_options]
+testpaths = ["apps", "libs"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "--doctest-modules -v"
+
+# =============================================================================
+# Coverage - Test Coverage
+# =============================================================================
+[tool.coverage.run]
+source = ["apps", "libs"]
+omit = ["*/tests/*", "*/__pycache__/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+{% endif %}
+
+{% if with_poethepoet %}
+# =============================================================================
+# Poe the Poet - Task Runner
+# =============================================================================
+[tool.poe.tasks]
+{% if with_ruff %}
+fmt = "ruff format"
+lint = "ruff check --fix"
+{% endif %}
+{% if with_ty %}
+check = "ty check"
+{% endif %}
+{% if with_pytest %}
+test = "pytest"
+cov = "pytest --cov=apps --cov=libs --cov-report=term-missing --cov-report=xml"
+{% endif %}
+{% if with_ruff and with_ty and with_pytest %}
+all = ["fmt", "lint", "check", "test"]
+{% endif %}
+
+{% if with_ruff %}
+# CI versions (no auto-fix, stricter)
+"ci:fmt" = "ruff format --check"
+"ci:lint" = "ruff check"
+{% endif %}
+
+{% if with_pre_commit %}
+# prek hooks (Rust-based pre-commit alternative)
+hooks = "prek install"
+"hooks:run" = "prek run --all-files"
+{% endif %}
+
+{% if with_docs %}
+# Documentation (MkDocs)
+docs = "mkdocs serve"
+"docs:build" = "mkdocs build"
+{% endif %}
+{% endif %}
