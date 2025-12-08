@@ -1,0 +1,69 @@
+{
+  // =========================================================================
+  // Recommended Extensions for Modern Python 2025 Stack
+  // =========================================================================
+  // This project uses: Ruff + ty + uv + una
+  // These extensions align with that toolchain.
+  // =========================================================================
+  "recommendations": [
+    // -------------------------------------------------------------------------
+    // Python Core
+    // -------------------------------------------------------------------------
+    "ms-python.python",              // Base Python support (interpreter, debugging)
+    "ms-python.debugpy",             // Python debugger
+    "ms-python.vscode-pylance",      // IntelliSense, type hints (until ty has IDE plugin)
+
+    // -------------------------------------------------------------------------
+    // Linting & Formatting (Ruff replaces black, isort, flake8, pylint)
+    // -------------------------------------------------------------------------
+    "charliermarsh.ruff",            // Ruff: single tool for linting + formatting
+
+    // -------------------------------------------------------------------------
+    // Testing
+    // -------------------------------------------------------------------------
+    "ms-python.vscode-python-envs",  // Python environment management
+
+    // -------------------------------------------------------------------------
+    // Monorepo / Project Support
+    // -------------------------------------------------------------------------
+    "tamasfe.even-better-toml",      // TOML support for pyproject.toml
+    "editorconfig.editorconfig",     // EditorConfig support
+
+    // -------------------------------------------------------------------------
+    // Docker (for apps/printer and docker-compose)
+    // -------------------------------------------------------------------------
+    "ms-azuretools.vscode-docker",   // Docker support
+
+    // -------------------------------------------------------------------------
+    // Git
+    // -------------------------------------------------------------------------
+    "eamodio.gitlens",               // Git supercharged
+  ],
+
+  // =========================================================================
+  // Unwanted Extensions for This Workspace
+  // =========================================================================
+  // These extensions CONFLICT with the modern Ruff-based toolchain.
+  // They cause false positives (e.g., Pylint can't resolve una namespaces)
+  // and duplicate functionality that Ruff already provides.
+  //
+  // VSCode will hide these from the "Recommended" tab and won't suggest them.
+  // If already installed, use "Disable (Workspace)" to turn them off for
+  // THIS project only, keeping them available for other projects.
+  // =========================================================================
+  "unwantedRecommendations": [
+    // Legacy Linters (Ruff replaces all of these)
+    "ms-python.pylint",
+    "ms-python.flake8",
+    "ms-python.mypy-type-checker",
+
+    // Legacy Formatters (ruff format replaces these)
+    "ms-python.black-formatter",
+    "ms-python.isort",
+    "ms-python.autopep8",
+    "ms-python.yapf",
+
+    // Duplicate/Conflicting Tools
+    "mikoz.autoflake-extension"
+  ]
+}

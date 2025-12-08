@@ -17,3 +17,8 @@ def greet(message: str = "Hello from una!") -> str:
     """
     result: str = cowsay.say(message)
     return result
+
+
+def main() -> None:
+    """CLI entry point for the greeter package."""
+    print(greet())

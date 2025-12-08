@@ -7,6 +7,9 @@ dependencies = ["greeter"]
 requires-python = ">=3.13"
 dynamic = ["una"]  # needed for hatch-una metadata hook to work
 
+[project.scripts]
+printer = "gpt_architecture.printer:run"
+
 [build-system]
 requires = ["hatchling", "hatch-una"]
 build-backend = "hatchling.build"

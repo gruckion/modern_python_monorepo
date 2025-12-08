@@ -51,6 +51,7 @@ uv run poe all            # Format, lint, typecheck, test
 | Type checking | **ty** | Astral's new Rust-based checker |
 | Testing | **pytest** | With doctest support |
 | Task runner | **poethepoet** | Simple task definitions |
+| Pre-commit | **pre-commit** | Git hooks for code quality |
 | ML Framework | **PyTorch** | MPS backend for Apple Silicon |
 
 ---
@@ -111,6 +112,38 @@ uv run poe ci:lint  # Lint without fixes
 
 ---
 
+## Pre-commit Hooks
+
+Pre-commit hooks run automatically before each `git commit` to enforce code quality.
+
+### Setup (one-time)
+
+```bash
+uv run poe hooks
+```
+
+### What Runs on Commit
+
+| Hook | Action |
+|------|--------|
+| `ruff --fix` | Lint and auto-fix issues |
+| `ruff-format` | Auto-format code |
+| `trailing-whitespace` | Remove trailing spaces |
+| `end-of-file-fixer` | Ensure newline at EOF |
+| `check-yaml` | Validate YAML files |
+| `check-toml` | Validate TOML files |
+| `check-added-large-files` | Prevent large file commits |
+
+### Run Manually
+
+```bash
+uv run poe hooks:run    # Run on all files
+```
+
+If hooks make changes, the commit is blocked. Review the changes and commit again.
+
+---
+
 ## Docker
 
 ### Build & Run
@@ -154,6 +187,44 @@ GitHub Actions runs on all PRs and pushes to `main`:
 4. **Tests** – `pytest`
 
 See [`.github/workflows/pr.yml`](.github/workflows/pr.yml)
+
+---
+
+## Publishing to PyPI
+
+We use `uv publish` for publishing packages to PyPI:
+
+```bash
+# Build the package
+uv build --package greeter
+
+# Publish to PyPI
+uv publish dist/greeter-*.whl dist/greeter-*.tar.gz
+
+# Or publish to TestPyPI first
+uv publish --index-url https://test.pypi.org/simple/ dist/greeter-*.whl
+```
+
+### Authentication
+
+Configure PyPI credentials via environment variables:
+```bash
+export UV_PUBLISH_USERNAME=__token__
+export UV_PUBLISH_PASSWORD=pypi-xxxxx
+```
+
+Or use a `.pypirc` file for token-based authentication.
+
+---
+
+## CLI Commands
+
+After installing the packages, these CLI commands are available:
+
+| Command | Package | Description |
+|---------|---------|-------------|
+| `greeter` | `greeter` | Run the greeter library |
+| `printer` | `printer` | Run the printer application |
 
 ---
 

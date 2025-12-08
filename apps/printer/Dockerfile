@@ -40,7 +40,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # =============================================================================
 FROM python:3.13-slim-bookworm AS runtime
 
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 
@@ -53,6 +54,10 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Run as non-root user for security
 RUN useradd --create-home --shell /bin/bash app
 USER app
+
+# Health check verifies Python environment is functional
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "from gpt_architecture.printer import run" || exit 1
 
 # Run the printer app
 CMD ["python", "-c", "from gpt_architecture.printer import run; run()"]
