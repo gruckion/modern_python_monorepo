@@ -7,7 +7,13 @@ requires-python = ">=3.13"
 dependencies = []
 
 [dependency-groups]
-dev = ["una>=0.7.0"]
+dev = [
+    "una>=0.7.0",
+    "ruff>=0.8.0",
+    "ty>=0.0.1a6",
+    "pytest>=8.0.0",
+    "poethepoet>=0.31.0",
+]
 
 [tool.uv]
 package = false
@@ -18,3 +24,56 @@ members = ["apps/*", "libs/*"]
 [tool.una]
 namespace = "gpt_architecture"
 requires-python = ">=3.13"
+
+# =============================================================================
+# Ruff - Linting & Formatting
+# =============================================================================
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "A",      # flake8-builtins (shadow built-ins)
+    "B",      # flake8-bugbear (common bugs)
+    "E",      # pycodestyle errors
+    "F",      # pyflakes
+    "I",      # isort (import sorting)
+    "N",      # pep8-naming
+    "UP",     # pyupgrade (modern syntax)
+    "W",      # pycodestyle warnings
+    "RUF",    # Ruff-specific rules
+    "T100",   # debugger breakpoints
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["gpt_architecture"]
+
+# =============================================================================
+# ty - Type Checking
+# =============================================================================
+[tool.ty.environment]
+python-version = "3.13"
+
+# =============================================================================
+# Pytest - Testing
+# =============================================================================
+[tool.pytest.ini_options]
+testpaths = ["apps", "libs"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "--doctest-modules -v"
+
+# =============================================================================
+# Poe the Poet - Task Runner
+# =============================================================================
+[tool.poe.tasks]
+fmt = "ruff format"
+lint = "ruff check --fix"
+check = "ty check"
+test = "pytest"
+all = ["fmt", "lint", "check", "test"]
+
+# CI versions (no auto-fix, stricter)
+"ci:fmt" = "ruff format --check"
+"ci:lint" = "ruff check"
