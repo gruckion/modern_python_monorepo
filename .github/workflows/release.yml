@@ -1,0 +1,119 @@
+name: Release to PyPI
+
+on:
+  push:
+    tags:
+      - "v*.*.*"          # All packages: v0.1.0
+      - "greeter-v*.*.*"  # Greeter only: greeter-v0.1.0
+      - "printer-v*.*.*"  # Printer only: printer-v0.1.0
+
+  workflow_dispatch:
+    inputs:
+      package:
+        description: "Package to publish (greeter, printer, or all)"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - greeter
+          - printer
+      test_pypi:
+        description: "Publish to TestPyPI instead of PyPI"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.determine.outputs.packages }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.14"
+
+      - name: Set up Python
+        run: uv python install 3.13
+
+      - name: Install dependencies
+        run: uv sync --all-packages --all-extras --dev
+
+      - name: Determine packages to build
+        id: determine
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            PACKAGES="${{ github.event.inputs.package }}"
+          elif [[ "${{ github.ref_name }}" == greeter-v* ]]; then
+            PACKAGES="greeter"
+          elif [[ "${{ github.ref_name }}" == printer-v* ]]; then
+            PACKAGES="printer"
+          else
+            PACKAGES="all"
+          fi
+          echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
+          echo "Building packages: $PACKAGES"
+
+      - name: Build greeter
+        if: contains(steps.determine.outputs.packages, 'greeter') || steps.determine.outputs.packages == 'all'
+        run: uv build --package greeter --out-dir dist/
+
+      - name: Build printer
+        if: contains(steps.determine.outputs.packages, 'printer') || steps.determine.outputs.packages == 'all'
+        run: uv build --package printer --out-dir dist/
+
+      - name: List built packages
+        run: ls -la dist/
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  test-pypi:
+    needs: build
+    if: github.event.inputs.test_pypi == 'true'
+    runs-on: ubuntu-latest
+    environment: test-pypi
+    permissions:
+      id-token: write  # Required for trusted publishing
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          verbose: true
+
+  pypi:
+    needs: build
+    if: github.event.inputs.test_pypi != 'true'
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # Required for trusted publishing
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true

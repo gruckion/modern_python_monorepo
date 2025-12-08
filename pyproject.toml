@@ -12,6 +12,7 @@ dev = [
     "ruff>=0.8.0",
     "ty>=0.0.1a6",
     "pytest>=8.0.0",
+    "pytest-cov>=6.0.0",
     "poethepoet>=0.31.0",
     "pre-commit>=4.0.0",
 ]
@@ -66,6 +67,20 @@ python_functions = ["test_*"]
 addopts = "--doctest-modules -v"
 
 # =============================================================================
+# Coverage - Test Coverage
+# =============================================================================
+[tool.coverage.run]
+source = ["apps", "libs"]
+omit = ["*/tests/*", "*/__pycache__/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+# =============================================================================
 # Poe the Poet - Task Runner
 # =============================================================================
 [tool.poe.tasks]
@@ -73,6 +88,7 @@ fmt = "ruff format"
 lint = "ruff check --fix"
 check = "ty check"
 test = "pytest"
+cov = "pytest --cov=apps --cov=libs --cov-report=term-missing --cov-report=xml"
 all = ["fmt", "lint", "check", "test"]
 
 # CI versions (no auto-fix, stricter)

@@ -1,8 +1,13 @@
 # GPT Architecture – Neural Architecture Experiments (uv + Una + MPS)
 
+[![CI](https://github.com/gruckion/gpt_architecture/actions/workflows/pr.yml/badge.svg)](https://github.com/gruckion/gpt_architecture/actions/workflows/pr.yml)
+[![codecov](https://codecov.io/gh/gruckion/gpt_architecture/branch/main/graph/badge.svg)](https://codecov.io/gh/gruckion/gpt_architecture)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A **uv + Una** Python monorepo for experimenting with neural network architectures on Apple Silicon (M2/M3, MPS backend).
 
 Designed for:
+
 - Fast iteration on new model architectures
 - Clean separation between reusable libraries and runnable apps
 - Reproducible builds via Python wheels
@@ -84,6 +89,7 @@ uv run poe all            # Format, lint, typecheck, test
 ```
 
 **Note:** All packages use the `gpt_architecture` namespace for consistent imports:
+
 ```python
 from gpt_architecture import greeter
 from gpt_architecture import printer
@@ -101,6 +107,7 @@ uv run poe fmt      # Format code (ruff)
 uv run poe lint     # Lint + auto-fix (ruff)
 uv run poe check    # Type check (ty)
 uv run poe test     # Run tests (pytest)
+uv run poe cov      # Run tests with coverage
 
 # Run everything
 uv run poe all      # fmt → lint → check → test
@@ -170,6 +177,7 @@ docker buildx bake ci
 ```
 
 The Dockerfile uses:
+
 - Multi-stage builds (smaller final image)
 - BuildKit cache mounts (faster rebuilds)
 - Non-root user (security)
@@ -192,7 +200,49 @@ See [`.github/workflows/pr.yml`](.github/workflows/pr.yml)
 
 ## Publishing to PyPI
 
-We use `uv publish` for publishing packages to PyPI:
+### Automated Release (Recommended)
+
+We use GitHub Actions with **Trusted Publishers** (OIDC) for secure, tokenless publishing.
+
+#### Release via Git Tag
+
+```bash
+# Release all packages
+git tag v0.1.0
+git push origin v0.1.0
+
+# Release specific package
+git tag greeter-v0.1.0
+git push origin greeter-v0.1.0
+```
+
+#### Manual Release via GitHub UI
+
+1. Go to **Actions** → **Release to PyPI**
+2. Click **Run workflow**
+3. Select package (`all`, `greeter`, or `printer`)
+4. Optionally check "Publish to TestPyPI" for testing
+
+### First-Time Setup (PyPI Trusted Publisher)
+
+Before the first release, configure PyPI to trust this repository:
+
+1. Go to <https://pypi.org/manage/account/publishing/>
+2. Add a pending publisher for each package:
+   - **PyPI Project Name**: `greeter` or `printer`
+   - **Owner**: Your GitHub username/org
+   - **Repository**: `gpt_architecture`
+   - **Workflow name**: `release.yml`
+   - **Environment**: `pypi`
+
+3. Create GitHub environments:
+   - Go to repo **Settings** → **Environments**
+   - Create `pypi` environment (optional: add reviewers for approval gate)
+   - Create `test-pypi` environment for TestPyPI releases
+
+### Manual Publishing (Local)
+
+For local publishing without GitHub Actions:
 
 ```bash
 # Build the package
@@ -202,18 +252,15 @@ uv build --package greeter
 uv publish dist/greeter-*.whl dist/greeter-*.tar.gz
 
 # Or publish to TestPyPI first
-uv publish --index-url https://test.pypi.org/simple/ dist/greeter-*.whl
+uv publish --publish-url https://test.pypi.org/legacy/ dist/*
 ```
 
-### Authentication
+#### Local Authentication
 
-Configure PyPI credentials via environment variables:
 ```bash
 export UV_PUBLISH_USERNAME=__token__
 export UV_PUBLISH_PASSWORD=pypi-xxxxx
 ```
-
-Or use a `.pypirc` file for token-based authentication.
 
 ---
 
@@ -255,4 +302,4 @@ Same pattern under `apps/`, plus add a `Dockerfile` if needed.
 
 ## License
 
-[Add your license here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

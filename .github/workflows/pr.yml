@@ -40,5 +40,11 @@ jobs:
       - name: Type check
         run: uv run poe check
 
-      - name: Run tests
-        run: uv run poe test
+      - name: Run tests with coverage
+        run: uv run poe cov
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
