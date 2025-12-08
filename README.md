@@ -50,14 +50,14 @@ uv run poe all            # Format, lint, typecheck, test
 
 | Category | Tool | Notes |
 |----------|------|-------|
-| Package manager | **uv** | Fast, Rust-based |
-| Monorepo | **Una** | Workspace wiring + wheel builds |
-| Python | **3.13+** | Required minimum |
-| Linting/Formatting | **Ruff** | Replaces black, isort, flake8 |
-| Type checking | **ty** | Astral's new Rust-based checker |
-| Testing | **pytest** | With doctest support |
-| Task runner | **poethepoet** | Simple task definitions |
-| Pre-commit | **pre-commit** | Git hooks for code quality |
+| Package manager | [**uv**](https://docs.astral.sh/uv/) | Fast, Rust-based |
+| Monorepo | [**Una**](https://github.com/carderne/una) | Workspace wiring + wheel builds |
+| Python | [**3.13+**](https://www.python.org/) | Required minimum |
+| Linting/Formatting | [**Ruff**](https://docs.astral.sh/ruff/) | Replaces black, isort, flake8 |
+| Type checking | [**ty**](https://github.com/astral-sh/ty) | Astral's new Rust-based checker |
+| Testing | [**pytest**](https://docs.pytest.org/) | With doctest support |
+| Task runner | [**poethepoet**](https://poethepoet.naber.dev/) | Simple task definitions |
+| Pre-commit | [**pre-commit**](https://pre-commit.com/) | Git hooks for code quality |
 
 ---
 
