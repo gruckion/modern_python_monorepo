@@ -1,5 +1,5 @@
 def main():
-    print("Hello from gpt-architecture!")
+    print("Hello from gpt_architecture!")
 
 
 if __name__ == "__main__":

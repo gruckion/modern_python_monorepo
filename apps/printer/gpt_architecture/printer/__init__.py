@@ -1,4 +1,4 @@
-from gpt-architecture import greeter
+from gpt_architecture import greeter
 
 
 def run() -> None:

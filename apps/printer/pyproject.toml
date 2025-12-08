@@ -18,7 +18,8 @@ allow-direct-references = true
 dev-dependencies = []
 
 [tool.uv.sources]
-greeter = { workspace = true }
 
+[tool.uv.sources.greeter]
+workspace = true
 [tool.hatch.build.hooks.una-build]
 [tool.hatch.metadata.hooks.una-meta]

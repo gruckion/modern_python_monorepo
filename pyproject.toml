@@ -1,5 +1,5 @@
 [project]
-name = "gpt-architecture"
+name = "gpt_architecture"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -7,9 +7,7 @@ requires-python = ">=3.13"
 dependencies = []
 
 [dependency-groups]
-dev = [
-    "una>=0.7.0",
-]
+dev = ["una>=0.7.0"]
 
 [tool.uv]
 package = false
@@ -18,5 +16,5 @@ package = false
 members = ["apps/*", "libs/*"]
 
 [tool.una]
-namespace = "gpt-architecture"
+namespace = "gpt_architecture"
 requires-python = ">=3.13"
