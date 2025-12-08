@@ -2,6 +2,13 @@ version = 1
 revision = 1
 requires-python = ">=3.13"
 
+[manifest]
+members = [
+    "gpt-architecture",
+    "greeter",
+    "printer",
+]
+
 [[package]]
 name = "click"
 version = "8.3.1"
@@ -21,6 +28,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d8/53/6f443c9a4a8358a93a6792e2acffb9d9d5cb0a5cfd8802644b7b1c9a02e4/colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44", size = 27697 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6", size = 25335 },
+]
+
+[[package]]
+name = "cowsay-python"
+version = "1.0.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/53/8b/559ef8395eefe4ff3e00904905323172cab0ad73629562d65fea330464d3/cowsay_python-1.0.2.tar.gz", hash = "sha256:36c9eb7524d4287e0b9753d16ccaeeccf7044c3a04460c5edbe59a1c2ae9cdae", size = 2201 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/05/57/d5c8333933d8079d6f5447e7f14a7f499611baa8e1c70e700537f1ee8630/cowsay_python-1.0.2-py3-none-any.whl", hash = "sha256:5d04b9444aee488e25238fd18d75ff8a88cc0f7cc3ec32edf55dc11bf5639505", size = 2788 },
 ]
 
 [[package]]
@@ -50,6 +66,20 @@ dev = [
 
 [package.metadata.requires-dev]
 dev = [{ name = "una", specifier = ">=0.7.0" }]
+
+[[package]]
+name = "greeter"
+version = "0.1.0"
+source = { editable = "libs/greeter" }
+dependencies = [
+    { name = "cowsay-python" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "cowsay-python", specifier = "==1.0.2" }]
+
+[package.metadata.requires-dev]
+dev = []
 
 [[package]]
 name = "markdown-it-py"
@@ -101,6 +131,20 @@ sdist = { url = "https://files.pythonhosted.org/packages/a1/d4/1fc4078c65507b51b
 wheels = [
     { url = "https://files.pythonhosted.org/packages/20/12/38679034af332785aac8774540895e234f4d07f7545804097de4b666afd8/packaging-25.0-py3-none-any.whl", hash = "sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484", size = 66469 },
 ]
+
+[[package]]
+name = "printer"
+version = "0.1.0"
+source = { editable = "apps/printer" }
+dependencies = [
+    { name = "greeter" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "greeter", editable = "libs/greeter" }]
+
+[package.metadata.requires-dev]
+dev = []
 
 [[package]]
 name = "pygments"
