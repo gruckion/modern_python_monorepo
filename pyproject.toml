@@ -15,6 +15,11 @@ dev = [
     "pytest-cov>=6.0.0",
     "poethepoet>=0.31.0",
 ]
+docs = [
+    "mkdocs>=1.6.0",
+    "mkdocs-material>=9.5.0",
+    "mkdocstrings[python]>=0.27.0",
+]
 
 [tool.uv]
 package = false
@@ -30,7 +35,7 @@ requires-python = ">=3.13"
 # Ruff - Linting & Formatting
 # =============================================================================
 [tool.ruff]
-target-version = "py313"
+# target-version auto-inferred from project.requires-python
 line-length = 120
 
 [tool.ruff.lint]
@@ -51,10 +56,8 @@ select = [
 known-first-party = ["modern_python_monorepo"]
 
 # =============================================================================
-# ty - Type Checking
+# ty - Type Checking (python-version auto-inferred from project.requires-python)
 # =============================================================================
-[tool.ty.environment]
-python-version = "3.13"
 
 # =============================================================================
 # Pytest - Testing
@@ -97,3 +100,7 @@ all = ["fmt", "lint", "check", "test"]
 # prek hooks (Rust-based pre-commit alternative)
 hooks = "prek install"
 "hooks:run" = "prek run --all-files"
+
+# Documentation (MkDocs)
+docs = "mkdocs serve"
+"docs:build" = "mkdocs build"

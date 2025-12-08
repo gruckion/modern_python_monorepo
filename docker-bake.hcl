@@ -9,6 +9,11 @@ variable "REGISTRY" {
   default = "ghcr.io/your-org"
 }
 
+// Python version - must match .python-version (sync manually or via CI)
+variable "PYTHON_VERSION" {
+  default = "3.13"
+}
+
 // Shared settings for all targets
 group "default" {
   targets = ["printer"]
@@ -22,6 +27,9 @@ target "printer" {
   platforms  = ["linux/amd64", "linux/arm64"]
   cache-from = ["type=gha"]
   cache-to   = ["type=gha,mode=max"]
+  args = {
+    PYTHON_VERSION = "${PYTHON_VERSION}"
+  }
 }
 
 // Development build (single platform, faster)

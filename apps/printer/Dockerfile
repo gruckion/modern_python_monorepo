@@ -2,10 +2,13 @@
 # Multi-stage build with BuildKit cache mounts for efficient builds
 # Reference: https://docs.astral.sh/uv/guides/integration/docker/
 
+# Python version - must match .python-version (sync manually or via CI)
+ARG PYTHON_VERSION=3.13
+
 # =============================================================================
 # Stage 1: Builder
 # =============================================================================
-FROM python:3.13-slim-bookworm AS builder
+FROM python:${PYTHON_VERSION}-slim-bookworm AS builder
 
 # Pin uv version for reproducibility
 COPY --from=ghcr.io/astral-sh/uv:0.5.14 /uv /uvx /bin/
@@ -38,7 +41,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # =============================================================================
 # Stage 2: Runtime (minimal image)
 # =============================================================================
-FROM python:3.13-slim-bookworm AS runtime
+FROM python:${PYTHON_VERSION}-slim-bookworm AS runtime
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1

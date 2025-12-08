@@ -3,9 +3,9 @@ name: Release to PyPI
 on:
   push:
     tags:
-      - "v*.*.*"          # All packages: v0.1.0
-      - "greeter-v*.*.*"  # Greeter only: greeter-v0.1.0
-      - "printer-v*.*.*"  # Printer only: printer-v0.1.0
+      - "v*.*.*" # All packages: v0.1.0
+      - "greeter-v*.*.*" # Greeter only: greeter-v0.1.0
+      - "printer-v*.*.*" # Printer only: printer-v0.1.0
 
   workflow_dispatch:
     inputs:
@@ -39,7 +39,7 @@ jobs:
           version: "0.5.14"
 
       - name: Set up Python
-        run: uv python install 3.13
+        run: uv python install
 
       - name: Install dependencies
         run: uv sync --all-packages --all-extras --dev
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: test-pypi
     permissions:
-      id-token: write  # Required for trusted publishing
+      id-token: write # Required for trusted publishing
 
     steps:
       - name: Download build artifacts
@@ -104,7 +104,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
-      id-token: write  # Required for trusted publishing
+      id-token: write # Required for trusted publishing
 
     steps:
       - name: Download build artifacts
