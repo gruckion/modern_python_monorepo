@@ -14,7 +14,6 @@ dev = [
     "pytest>=8.0.0",
     "pytest-cov>=6.0.0",
     "poethepoet>=0.31.0",
-    "pre-commit>=4.0.0",
 ]
 
 [tool.uv]
@@ -95,6 +94,6 @@ all = ["fmt", "lint", "check", "test"]
 "ci:fmt" = "ruff format --check"
 "ci:lint" = "ruff check"
 
-# Pre-commit hooks
-hooks = "pre-commit install"
-"hooks:run" = "pre-commit run --all-files"
+# prek hooks (Rust-based pre-commit alternative)
+hooks = "prek install"
+"hooks:run" = "prek run --all-files"

@@ -31,11 +31,10 @@ jobs:
             exit 1
           fi
 
-      - name: Format check
-        run: uv run poe ci:fmt
-
-      - name: Lint check
-        run: uv run poe ci:lint
+      - name: Run prek hooks
+        uses: j178/prek-action@v1
+        with:
+          extra-args: '--all-files'
 
       - name: Type check
         run: uv run poe check

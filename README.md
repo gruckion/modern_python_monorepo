@@ -6,11 +6,15 @@
 
 A **uv + Una** Python monorepo template with best practices for modern Python development.
 
+> **Note:** This project uses [**prek**](https://prek.j178.dev/) instead of pre-commit for git hooks.
+> prek is a Rust-based reimplementation that's **10x faster**, uses **50% less disk space**,
+> and requires no Python runtime. It's fully compatible with `.pre-commit-config.yaml`.
+
 Designed for:
 
 - Clean separation between reusable libraries and runnable apps
 - Reproducible builds via Python wheels
-- Fast development with Ruff, ty, pytest, and poethepoet
+- Fast development with Ruff, ty, pytest, and prek
 - Docker support with multi-platform builds
 - CI/CD with GitHub Actions and PyPI publishing
 
@@ -22,10 +26,14 @@ Designed for:
 # Install uv (if not already installed)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
+# Install prek for git hooks
+uv tool install prek
+
 # Clone and setup
 git clone <repo-url>
 cd modern_python_monorepo
 uv sync --all-packages    # Install all deps + workspace packages
+uv run poe hooks          # Install git hooks
 
 # Verify setup
 uv run poe all            # Format, lint, typecheck, test
@@ -57,7 +65,7 @@ uv run poe all            # Format, lint, typecheck, test
 | Type checking | [**ty**](https://github.com/astral-sh/ty) | Astral's new Rust-based checker |
 | Testing | [**pytest**](https://docs.pytest.org/) | With doctest support |
 | Task runner | [**poethepoet**](https://poethepoet.naber.dev/) | Simple task definitions |
-| Pre-commit | [**pre-commit**](https://pre-commit.com/) | Git hooks for code quality |
+| Git hooks | [**prek**](https://prek.j178.dev/) | Rust-based pre-commit (10x faster) |
 
 ---
 
@@ -119,32 +127,49 @@ uv run poe ci:lint  # Lint without fixes
 
 ---
 
-## Pre-commit Hooks
+## Git Hooks (prek)
 
-Pre-commit hooks run automatically before each `git commit` to enforce code quality.
+We use [**prek**](https://prek.j178.dev/) - a Rust-based reimplementation of pre-commit that's **10x faster** and requires no Python runtime. Hooks run automatically before each `git commit`.
+
+### Why prek over pre-commit?
+
+| Aspect | pre-commit | prek |
+|--------|------------|------|
+| Installation speed | ~187s | ~18s (10x faster) |
+| Disk usage | 1.6 GB | 810 MB (50% less) |
+| Dependencies | Requires Python | Single binary |
+| Config compatibility | ✅ | ✅ (drop-in) |
 
 ### Setup (one-time)
 
 ```bash
+# Install prek (if not installed)
+uv tool install prek
+
+# Install git hooks
 uv run poe hooks
 ```
 
 ### What Runs on Commit
 
-| Hook | Action |
-|------|--------|
-| `ruff --fix` | Lint and auto-fix issues |
-| `ruff-format` | Auto-format code |
-| `trailing-whitespace` | Remove trailing spaces |
-| `end-of-file-fixer` | Ensure newline at EOF |
-| `check-yaml` | Validate YAML files |
-| `check-toml` | Validate TOML files |
-| `check-added-large-files` | Prevent large file commits |
+| Hook | Source | Action |
+|------|--------|--------|
+| `ruff --fix` | ruff-pre-commit | Lint and auto-fix issues |
+| `ruff-format` | ruff-pre-commit | Auto-format code |
+| `trailing-whitespace` | prek builtin | Remove trailing spaces |
+| `end-of-file-fixer` | prek builtin | Ensure newline at EOF |
+| `check-yaml` | prek builtin | Validate YAML files |
+| `check-toml` | prek builtin | Validate TOML files |
+| `check-added-large-files` | prek builtin | Prevent large file commits |
+| `check-merge-conflict` | prek builtin | Detect merge conflicts |
+| `detect-private-key` | prek builtin | Prevent key leaks |
 
 ### Run Manually
 
 ```bash
 uv run poe hooks:run    # Run on all files
+prek run --all-files    # Direct prek command
+prek run ruff           # Run specific hook
 ```
 
 If hooks make changes, the commit is blocked. Review the changes and commit again.
@@ -189,10 +214,9 @@ The Dockerfile uses:
 
 GitHub Actions runs on all PRs and pushes to `main`:
 
-1. **Format check** – `ruff format --check`
-2. **Lint check** – `ruff check`
-3. **Type check** – `ty check`
-4. **Tests** – `pytest`
+1. **prek hooks** – All hooks via [prek-action](https://github.com/j178/prek-action)
+2. **Type check** – `ty check`
+3. **Tests with coverage** – `pytest` with Codecov upload
 
 See [`.github/workflows/pr.yml`](.github/workflows/pr.yml)
 
