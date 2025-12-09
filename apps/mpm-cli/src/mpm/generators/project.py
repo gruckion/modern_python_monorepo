@@ -165,7 +165,7 @@ def _generate_docs(renderer: TemplateRenderer, output: Path, ctx: dict, theme: D
 
     # First, ensure dependencies are synced so mkdocs is available
     subprocess.run(
-        ["uv", "sync", "--group", "docs", "--quiet"],
+        ["uv", "sync", "--quiet"],
         cwd=output,
         capture_output=True,
     )

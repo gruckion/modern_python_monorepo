@@ -100,7 +100,7 @@ class TestBinaryIntegration:
 
         # Step 2: Sync dependencies in the generated project
         result = subprocess.run(
-            ["uv", "sync", "--group", "docs"],
+            ["uv", "sync"],
             cwd=project_path,
             capture_output=True,
             text=True,
@@ -171,7 +171,7 @@ class TestBinaryIntegration:
 
         # Step 2: Sync dependencies in the generated project
         result = subprocess.run(
-            ["uv", "sync", "--group", "docs"],
+            ["uv", "sync"],
             cwd=project_path,
             capture_output=True,
             text=True,

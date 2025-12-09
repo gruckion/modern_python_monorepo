@@ -146,7 +146,6 @@ When `pyproject.toml` or `uv.lock` changes (e.g., after git pull):
 
 ```bash
 uv sync --all-packages
-uv sync --all-packages --group docs
 ```
 
 ## Useful Commands

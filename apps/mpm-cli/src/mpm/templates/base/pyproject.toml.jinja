@@ -14,9 +14,8 @@ dev = [
     "pytest>=8.0.0",
     "pytest-cov>=6.0.0",
     "poethepoet>=0.31.0",
-]
 {% if with_docs %}
-docs = [
+    # Documentation (MkDocs)
     "mkdocs>=1.6.0",
 {% if docs_theme.value == "material" %}
     "mkdocs-material>=9.0.0",
@@ -26,8 +25,8 @@ docs = [
     "mkdocstrings[python]>=0.27.0",
     "pymdown-extensions>=10.0.0",
     "mkdocs-mermaid2-plugin>=1.0.0",
-]
 {% endif %}
+]
 
 {% if structure.value == "monorepo" %}
 [tool.uv]
