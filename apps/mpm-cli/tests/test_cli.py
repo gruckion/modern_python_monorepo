@@ -7,12 +7,12 @@ from typer.testing import CliRunner
 
 from mpm.cli import app
 
-# Regex to strip ANSI escape codes from output
+# Regex to strip ANSI escape codes from output (for CI compatibility)
 _ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
 
 
 def strip_ansi(text: str) -> str:
-    """Strip ANSI escape codes from text."""
+    """Strip ANSI escape codes from text for reliable assertions."""
     return _ANSI_ESCAPE.sub("", text)
 
 

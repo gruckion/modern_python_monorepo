@@ -40,6 +40,8 @@ jobs:
         run: uv run poe check
 
       - name: Run tests with coverage
+        env:
+          NO_COLOR: "1"
         run: uv run poe cov
 
       - name: Upload coverage reports to Codecov
