@@ -25,6 +25,8 @@ dev = [
     "mkdocstrings[python]>=0.27.0",
     "pymdown-extensions>=10.0.0",
     "mkdocs-mermaid2-plugin>=1.0.0",
+    # Pin click to fix mkdocs live reload (https://github.com/mkdocs/mkdocs/issues/4032)
+    "click>=8.0,<8.3",
 {% endif %}
 ]
 

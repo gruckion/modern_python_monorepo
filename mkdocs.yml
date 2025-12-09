@@ -1,5 +1,5 @@
-site_name: Modern Python Monorepo
-site_description: A uv + Una Python monorepo template with best practices for modern Python development
+site_name: MPM - Modern Python Monorepo CLI
+site_description: A CLI tool for scaffolding production-ready Python monorepo projects
 site_url: https://gruckion.github.io/modern_python_monorepo/
 repo_url: https://github.com/gruckion/modern_python_monorepo
 repo_name: gruckion/modern_python_monorepo
@@ -34,18 +34,11 @@ plugins:
             show_signature_annotations: true
 
 nav:
-  - Home: index.md
-  - Getting Started: getting-started.md
-  - Development:
-      - Setup: development/setup.md
-      - Commands: development/commands.md
-      - Docker: development/docker.md
-  - Architecture: architecture/overview.md
-  - API Reference:
-      - Overview: api/index.md
-      - greeter: api/greeter.md
-      - printer: api/printer.md
+  - Quick Start: index.md
+  - Project Structure: project-structure.md
+  - Technology Choices: technology-choices.md
   - Contributing: contributing.md
+  - FAQ: faq.md
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -59,8 +52,7 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid_custom
-  - pymdownx.tabbed:
-      alternate_style: true
+  - pymdownx.tabbed
   - admonition
   - pymdownx.details
   - attr_list
