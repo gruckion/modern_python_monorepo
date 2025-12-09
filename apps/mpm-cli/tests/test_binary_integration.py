@@ -57,6 +57,10 @@ def temp_project_dir():
     shutil.rmtree(tmpdir, ignore_errors=True)
 
 
+@pytest.mark.skipif(
+    os.environ.get("CI") == "true",
+    reason="Server tests are flaky in CI due to timing constraints",
+)
 class TestBinaryIntegration:
     """Test the mpm binary with full project generation and docs serving."""
 

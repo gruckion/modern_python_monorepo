@@ -16,8 +16,11 @@ _PROJECT_ROOT = Path(__file__).parent.parent.parent.parent.parent.resolve()
 
 
 @pytest.fixture
-def cli_runner() -> CliRunner:
-    """Typer CLI test runner."""
+def cli_runner(monkeypatch: pytest.MonkeyPatch) -> CliRunner:
+    """Typer CLI test runner with colors disabled for consistent output."""
+    # Set NO_COLOR to disable rich/typer ANSI codes in test output
+    monkeypatch.setenv("NO_COLOR", "1")
+    monkeypatch.setenv("TERM", "dumb")
     return CliRunner()
 
 
