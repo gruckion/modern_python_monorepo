@@ -1,6 +1,7 @@
 """Shared test fixtures for MPM CLI tests."""
 
 import os
+import re
 import tempfile
 from collections.abc import Generator
 from pathlib import Path
@@ -9,18 +10,28 @@ from typing import Any
 import pytest
 from typer.testing import CliRunner
 
+# Disable Rich colors BEFORE importing mpm.cli (which imports Rich via Typer)
+# This ensures consistent output in CI environments
+os.environ["NO_COLOR"] = "1"
+os.environ["TERM"] = "dumb"
+
 from mpm.cli import app
 
 # Store the original directory at module load time
 _PROJECT_ROOT = Path(__file__).parent.parent.parent.parent.parent.resolve()
 
+# Regex to strip ANSI escape codes from output
+ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def strip_ansi(text: str) -> str:
+    """Strip ANSI escape codes from text."""
+    return ANSI_ESCAPE.sub("", text)
+
 
 @pytest.fixture
-def cli_runner(monkeypatch: pytest.MonkeyPatch) -> CliRunner:
-    """Typer CLI test runner with colors disabled for consistent output."""
-    # Set NO_COLOR to disable rich/typer ANSI codes in test output
-    monkeypatch.setenv("NO_COLOR", "1")
-    monkeypatch.setenv("TERM", "dumb")
+def cli_runner() -> CliRunner:
+    """Typer CLI test runner."""
     return CliRunner()
 
 

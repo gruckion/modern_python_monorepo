@@ -1,10 +1,19 @@
 """Unit tests for CLI commands."""
 
 import os
+import re
 
 from typer.testing import CliRunner
 
 from mpm.cli import app
+
+# Regex to strip ANSI escape codes from output
+_ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def strip_ansi(text: str) -> str:
+    """Strip ANSI escape codes from text."""
+    return _ANSI_ESCAPE.sub("", text)
 
 
 def test_version(cli_runner: CliRunner) -> None:
@@ -18,43 +27,48 @@ def test_help(cli_runner: CliRunner) -> None:
     """Test --help flag."""
     result = cli_runner.invoke(app, ["--help"])
     assert result.exit_code == 0
-    assert "Modern Python Monorepo" in result.stdout
-    assert "--monorepo" in result.stdout
-    assert "--single" in result.stdout
-    assert "new" in result.stdout
-    assert "add" in result.stdout
+    output = strip_ansi(result.stdout)
+    assert "Modern Python Monorepo" in output
+    assert "--monorepo" in output
+    assert "--single" in output
+    assert "new" in output
+    assert "add" in output
 
 
 def test_new_help(cli_runner: CliRunner) -> None:
     """Test mpm new --help."""
     result = cli_runner.invoke(app, ["new", "--help"])
     assert result.exit_code == 0
-    assert "PROJECT_NAME" in result.stdout
-    assert "--monorepo" in result.stdout
-    assert "--single" in result.stdout
+    output = strip_ansi(result.stdout)
+    assert "PROJECT_NAME" in output
+    assert "--monorepo" in output
+    assert "--single" in output
 
 
 def test_add_help(cli_runner: CliRunner) -> None:
     """Test mpm add --help."""
     result = cli_runner.invoke(app, ["add", "--help"])
     assert result.exit_code == 0
-    assert "lib" in result.stdout
-    assert "app" in result.stdout
+    output = strip_ansi(result.stdout)
+    assert "lib" in output
+    assert "app" in output
 
 
 def test_add_lib_help(cli_runner: CliRunner) -> None:
     """Test mpm add lib --help."""
     result = cli_runner.invoke(app, ["add", "lib", "--help"])
     assert result.exit_code == 0
-    assert "Library name" in result.stdout
+    output = strip_ansi(result.stdout)
+    assert "Library name" in output
 
 
 def test_add_app_help(cli_runner: CliRunner) -> None:
     """Test mpm add app --help."""
     result = cli_runner.invoke(app, ["add", "app", "--help"])
     assert result.exit_code == 0
-    assert "Application name" in result.stdout
-    assert "--docker" in result.stdout
+    output = strip_ansi(result.stdout)
+    assert "Application name" in output
+    assert "--docker" in output
 
 
 def test_basic_monorepo_creation(cli_runner: CliRunner, temp_dir) -> None:

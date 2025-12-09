@@ -881,9 +881,15 @@ class TestAutoSync:
 
     def test_no_sync_flag_in_help(self, cli_runner) -> None:
         """Test that --no-sync flag appears in help output."""
+        import re
+
         from mpm.cli import app
+
+        # Strip ANSI escape codes for reliable assertion
+        ansi_escape = re.compile(r"\x1b\[[0-9;]*m")
 
         result = cli_runner.invoke(app, ["new", "--help"])
         assert result.exit_code == 0
-        assert "--no-sync" in result.stdout
-        assert "Skip running uv sync" in result.stdout
+        output = ansi_escape.sub("", result.stdout)
+        assert "--no-sync" in output
+        assert "Skip running uv sync" in output
