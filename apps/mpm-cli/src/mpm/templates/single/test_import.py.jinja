@@ -1,0 +1,13 @@
+"""Test {{ namespace }} package can be imported."""
+
+
+def test_import_{{ namespace }}() -> None:
+    """Test that {{ namespace }} can be imported."""
+    import {{ namespace }}
+    assert {{ namespace }} is not None
+
+
+def test_version() -> None:
+    """Test that version is defined."""
+    from {{ namespace }} import __version__
+    assert __version__ == "0.1.0"

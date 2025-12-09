@@ -1,0 +1,199 @@
+# {{ project_name }}
+{% if with_ci %}
+
+[![CI](https://github.com/{{ github_owner or 'your-username' }}/{{ project_slug }}/actions/workflows/pr.yml/badge.svg)](https://github.com/{{ github_owner or 'your-username' }}/{{ project_slug }}/actions/workflows/pr.yml)
+[![codecov](https://codecov.io/gh/{{ github_owner or 'your-username' }}/{{ project_slug }}/branch/main/graph/badge.svg)](https://codecov.io/gh/{{ github_owner or 'your-username' }}/{{ project_slug }})
+{% endif %}
+{% if license_type.value == "MIT" %}
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+{% elif license_type.value == "Apache-2.0" %}
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+{% elif license_type.value == "GPL-3.0" %}
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+{% endif %}
+{% if project_description %}
+
+{{ project_description }}
+{% else %}
+
+A **uv + Una** Python {% if structure.value == "monorepo" %}monorepo{% else %}project{% endif %} with best practices for modern Python development.
+{% endif %}
+{% if with_precommit %}
+
+> **Note:** This project uses [**prek**](https://prek.j178.dev/) instead of pre-commit for git hooks.
+> prek is a Rust-based reimplementation that's **10x faster**, uses **50% less disk space**,
+> and requires no Python runtime. It's fully compatible with `.pre-commit-config.yaml`.
+{% endif %}
+
+---
+
+## Quick Start
+
+```bash
+# Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+{% if with_precommit %}
+
+# Install prek for git hooks
+uv tool install prek
+{% endif %}
+
+# Clone and setup
+git clone https://github.com/{{ github_owner or 'your-username' }}/{{ project_slug }}.git
+cd {{ project_slug }}
+{% if structure.value == "monorepo" %}
+uv sync --all-packages    # Install all deps + workspace packages
+{% else %}
+uv sync                   # Install dependencies
+{% endif %}
+{% if with_precommit %}
+uv run poe hooks          # Install git hooks
+{% endif %}
+
+# Verify setup
+uv run poe all            # Format, lint, typecheck, test
+```
+
+---
+
+## Technology Stack
+
+| Category | Tool | Notes |
+|----------|------|-------|
+| Package manager | [**uv**](https://docs.astral.sh/uv/) | Fast, Rust-based |
+{% if structure.value == "monorepo" %}
+| Monorepo | [**Una**](https://github.com/carderne/una) | Workspace wiring + wheel builds |
+{% endif %}
+| Python | **{{ python_version.value }}+** | Required minimum |
+| Linting/Formatting | [**Ruff**](https://docs.astral.sh/ruff/) | Replaces black, isort, flake8 |
+| Type checking | [**ty**](https://github.com/astral-sh/ty) | Astral's Rust-based checker |
+| Testing | [**pytest**](https://docs.pytest.org/) | With doctest support |
+| Task runner | [**poethepoet**](https://poethepoet.naber.dev/) | Simple task definitions |
+{% if with_precommit %}
+| Git hooks | [**prek**](https://prek.j178.dev/) | Rust-based pre-commit (10x faster) |
+{% endif %}
+{% if with_docs %}
+| Documentation | [**MkDocs**](https://www.mkdocs.org/) | Static site generator |
+{% endif %}
+
+---
+{% if structure.value == "monorepo" %}
+
+## Repository Layout
+
+```text
+{{ project_slug }}/
+├── pyproject.toml           # Workspace root + all tool configs
+├── uv.lock                  # Lockfile (committed)
+{% if with_docs %}
+├── mkdocs.yml               # Documentation configuration
+{% endif %}
+{% if with_docker %}
+├── docker-compose.yml       # Container orchestration
+├── docker-bake.hcl          # Multi-platform builds
+{% endif %}
+{% if with_ci %}
+├── .github/workflows/       # CI/CD
+│   └── pr.yml
+{% endif %}
+{% if with_docs %}
+├── docs/                    # Documentation source (MkDocs)
+{% endif %}
+├── apps/                    # Runnable applications
+{% if with_samples %}
+│   └── printer/
+│       ├── pyproject.toml
+{% if with_docker %}
+│       ├── Dockerfile
+{% endif %}
+│       └── {{ namespace }}/
+│           └── printer/
+│               ├── __init__.py
+│               └── py.typed
+{% endif %}
+└── libs/                    # Reusable libraries
+{% if with_samples %}
+    └── greeter/
+        ├── pyproject.toml
+        └── {{ namespace }}/
+            └── greeter/
+                ├── __init__.py
+                └── py.typed
+{% endif %}
+```
+{% if with_samples %}
+
+### Sample Packages
+
+- `libs/greeter` - Sample greeting library using cowsay
+- `apps/printer` - Sample application that uses the greeter library
+{% endif %}
+{% endif %}
+
+## Development Commands
+
+All commands are run via `uv run poe <task>`:
+
+| Command | Description |
+|---------|-------------|
+| `uv run poe fmt` | Format code with Ruff |
+| `uv run poe lint` | Lint code with Ruff (auto-fixes issues) |
+| `uv run poe check` | Type check with ty |
+| `uv run poe test` | Run pytest |
+| `uv run poe cov` | Run pytest with coverage |
+| `uv run poe all` | Run fmt, lint, check, and test |
+{% if with_precommit %}
+| `uv run poe hooks` | Install prek git hooks |
+{% endif %}
+{% if with_docs %}
+| `uv run poe docs` | Serve docs locally |
+{% endif %}
+{% if with_docker and (with_samples or structure.value != "monorepo") %}
+
+---
+
+## Docker
+
+Build and run with Docker:
+
+```bash
+# Build all images
+docker buildx bake
+
+# Run with docker-compose
+docker compose up
+{% if with_samples %}
+
+# Development with live reload
+docker compose watch printer-dev
+{% endif %}
+```
+{% endif %}
+{% if with_docs %}
+
+---
+
+## Documentation
+
+```bash
+# Serve docs locally at http://127.0.0.1:8000
+uv run poe docs
+
+# Build static docs
+uv run poe docs:build
+```
+{% endif %}
+
+---
+
+## License
+
+{% if license_type.value == "MIT" %}
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+{% elif license_type.value == "Apache-2.0" %}
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+{% elif license_type.value == "GPL-3.0" %}
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+{% else %}
+See LICENSE file for details.
+{% endif %}

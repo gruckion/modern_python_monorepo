@@ -1,0 +1,57 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.14"
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+{% if structure is defined and structure.value == "monorepo" %}
+        run: uv sync --all-packages --all-extras --dev
+{% else %}
+        run: uv sync --all-extras --dev
+{% endif %}
+
+      - name: Check lockfile is up to date
+        run: |
+{% if structure is defined and structure.value == "monorepo" %}
+          uv sync --all-packages --all-extras --dev
+{% else %}
+          uv sync --all-extras --dev
+{% endif %}
+          if [[ -n $(git diff --stat uv.lock) ]]; then
+            echo "uv.lock is out of date. Run 'uv sync' and commit the changes."
+            exit 1
+          fi
+
+      - name: Run prek hooks
+        uses: j178/prek-action@v1
+        with:
+          extra-args: "--all-files"
+
+      - name: Type check
+        run: uv run poe check
+
+      - name: Run tests with coverage
+        run: uv run poe cov
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false

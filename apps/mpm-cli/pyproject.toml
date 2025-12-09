@@ -1,0 +1,54 @@
+[project]
+name = "mpm-cli"
+version = "0.1.0"
+description = "Modern Python Monorepo CLI - Scaffold production-ready Python projects"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+keywords = ["cli", "scaffold", "monorepo", "python", "uv", "una"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Code Generators",
+]
+dependencies = [
+    "typer>=0.12.0",
+    "questionary>=2.1.0",
+    "rich>=13.0.0",
+    "jinja2>=3.1.0",
+    "pydantic>=2.0.0",
+]
+
+[project.scripts]
+mpm = "mpm.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mpm"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=6.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+markers = [
+    "slow: marks tests as slow (run with --slow)",
+]
+
+[tool.coverage.run]
+source = ["src/mpm"]
+omit = ["*/tests/*"]

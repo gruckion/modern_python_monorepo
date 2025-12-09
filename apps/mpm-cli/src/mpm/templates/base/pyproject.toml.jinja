@@ -1,9 +1,9 @@
 [project]
-name = "modern_python_monorepo"
+name = "{{ project_slug }}"
 version = "0.1.0"
-description = "Add your description here"
+description = "{{ project_description }}"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">={{ python_version.value }}"
 dependencies = []
 
 [dependency-groups]
@@ -14,21 +14,22 @@ dev = [
     "pytest>=8.0.0",
     "pytest-cov>=6.0.0",
     "poethepoet>=0.31.0",
-    # MPM CLI dependencies
-    "typer>=0.12.0",
-    "questionary>=2.1.0",
-    "rich>=13.0.0",
-    "jinja2>=3.1.0",
-    "pydantic>=2.0.0",
 ]
+{% if with_docs %}
 docs = [
     "mkdocs>=1.6.0",
+{% if docs_theme.value == "material" %}
+    "mkdocs-material>=9.0.0",
+{% else %}
     "mkdocs-shadcn>=0.9.0",
+{% endif %}
     "mkdocstrings[python]>=0.27.0",
     "pymdown-extensions>=10.0.0",
     "mkdocs-mermaid2-plugin>=1.0.0",
 ]
+{% endif %}
 
+{% if structure.value == "monorepo" %}
 [tool.uv]
 package = false
 
@@ -36,9 +37,18 @@ package = false
 members = ["apps/*", "libs/*"]
 
 [tool.una]
-namespace = "modern_python_monorepo"
-requires-python = ">=3.13"
+namespace = "{{ namespace }}"
+requires-python = ">={{ python_version.value }}"
 
+{% else %}
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/{{ namespace }}"]
+
+{% endif %}
 # =============================================================================
 # Ruff - Linting & Formatting
 # =============================================================================
@@ -61,7 +71,7 @@ select = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["modern_python_monorepo", "mpm"]
+known-first-party = ["{{ namespace }}"]
 
 # =============================================================================
 # ty - Type Checking (python-version auto-inferred from project.requires-python)
@@ -71,7 +81,11 @@ known-first-party = ["modern_python_monorepo", "mpm"]
 # Pytest - Testing
 # =============================================================================
 [tool.pytest.ini_options]
+{% if structure.value == "monorepo" %}
 testpaths = ["apps", "libs"]
+{% else %}
+testpaths = ["tests"]
+{% endif %}
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 addopts = "--doctest-modules -v"
@@ -80,7 +94,11 @@ addopts = "--doctest-modules -v"
 # Coverage - Test Coverage
 # =============================================================================
 [tool.coverage.run]
+{% if structure.value == "monorepo" %}
 source = ["apps", "libs"]
+{% else %}
+source = ["src"]
+{% endif %}
 omit = ["*/tests/*", "*/__pycache__/*"]
 
 [tool.coverage.report]
@@ -98,7 +116,11 @@ fmt = "ruff format"
 lint = "ruff check --fix"
 check = "ty check"
 test = "pytest"
+{% if structure.value == "monorepo" %}
 cov = "pytest --cov=apps --cov=libs --cov-report=term-missing --cov-report=xml"
+{% else %}
+cov = "pytest --cov=src --cov-report=term-missing --cov-report=xml"
+{% endif %}
 all = ["fmt", "lint", "check", "test"]
 
 # CI versions (no auto-fix, stricter)
@@ -108,7 +130,9 @@ all = ["fmt", "lint", "check", "test"]
 # prek hooks (Rust-based pre-commit alternative)
 hooks = "prek install"
 "hooks:run" = "prek run --all-files"
+{% if with_docs %}
 
 # Documentation (MkDocs)
 docs = "mkdocs serve"
 "docs:build" = "mkdocs build"
+{% endif %}

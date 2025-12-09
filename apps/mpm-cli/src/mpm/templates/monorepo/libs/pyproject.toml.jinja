@@ -1,0 +1,26 @@
+[project]
+name = "{{ package_name }}"
+version = "0.1.0"
+description = "{{ package_description }}"
+authors = []
+dependencies = []
+requires-python = ">={{ python_version.value if python_version is defined else '3.13' }}"
+dynamic = ["una"]  # needed for hatch-una metadata hook to work
+
+[project.scripts]
+{{ package_name }} = "{{ namespace }}.{{ package_name }}:main"
+
+[build-system]
+requires = ["hatchling", "hatch-una"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.uv]
+dev-dependencies = []
+
+[tool.uv.sources]
+
+[tool.hatch.build.hooks.una-build]
+[tool.hatch.metadata.hooks.una-meta]
