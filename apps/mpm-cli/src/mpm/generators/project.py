@@ -6,6 +6,7 @@ from pathlib import Path
 
 from rich.console import Console
 
+from mpm import __version__
 from mpm.config import DocsTheme, ProjectConfig, ProjectStructure
 from mpm.generators.renderer import TemplateRenderer
 
@@ -66,6 +67,13 @@ def generate_project(config: ProjectConfig, output_path: Path) -> None:
 
 def _generate_base_files(renderer: TemplateRenderer, output: Path, ctx: dict) -> None:
     """Generate base project files."""
+    # Add mpm version and timestamp to context for mpm.toml
+    ctx["mpm_version"] = __version__
+    ctx["created_at"] = datetime.now().isoformat()
+
+    # Generate mpm.toml FIRST (stores configuration for future `mpm add` commands)
+    renderer.render_to_file("base/mpm.toml.jinja", output / "mpm.toml", ctx)
+
     renderer.render_to_file("base/pyproject.toml.jinja", output / "pyproject.toml", ctx)
     renderer.render_to_file("base/README.md.jinja", output / "README.md", ctx)
     renderer.render_to_file("base/.python-version.jinja", output / ".python-version", ctx)

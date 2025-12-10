@@ -118,29 +118,34 @@ def add_package(
     description: str = "",
     with_docker: bool = False,
     project_root: Path | None = None,
-    namespace: str = "my_project",
+    namespace: str | None = None,
 ) -> None:
-    """Add a new package to an existing project."""
-    from mpm.config import PythonVersion
+    """Add a new package to an existing mpm-managed project.
+
+    Requires mpm.toml to exist at the project root. Reads namespace and python_version
+    from the configuration.
+
+    Raises:
+        SystemExit: If mpm.toml is not found.
+    """
+    import sys
+
+    from mpm.utils import find_mpm_config, load_mpm_config
 
     renderer = TemplateRenderer()
     root = project_root or Path.cwd()
 
-    # Read Python version from .python-version file if it exists
-    python_version = PythonVersion.PY313  # Default
-    python_version_file = root / ".python-version"
-    if python_version_file.exists():
-        version_str = python_version_file.read_text().strip()
-        # Map version string to PythonVersion enum
-        version_map = {
-            "3.11": PythonVersion.PY311,
-            "3.12": PythonVersion.PY312,
-            "3.13": PythonVersion.PY313,
-        }
-        # Handle versions like "3.13.1" by extracting major.minor
-        major_minor = ".".join(version_str.split(".")[:2])
-        if major_minor in version_map:
-            python_version = version_map[major_minor]
+    # Require mpm.toml
+    mpm_config_path = find_mpm_config(root)
+    if not mpm_config_path:
+        console.print("[red]Error:[/red] No mpm.toml found. This command requires an mpm-managed project.")
+        console.print("[dim]Create a new project with 'mpm new <name>' first.[/dim]")
+        sys.exit(1)
+
+    mpm_config = load_mpm_config(mpm_config_path)
+    namespace = namespace or mpm_config.project_name
+    python_version = mpm_config.python_version
+    console.print("[dim]Using configuration from mpm.toml[/dim]")
 
     ctx = {
         "package_name": name,

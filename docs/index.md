@@ -200,7 +200,7 @@ A clean monorepo structure without sample packages:
 
 ## Flags Cheat Sheet
 
-See the full list in the [CLI Reference](cli.md). Key flags:
+See the full list in the [CLI Commands](cli/commands.md). Key flags:
 
 | Flag | Short | Description |
 |------|-------|-------------|
@@ -214,7 +214,7 @@ See the full list in the [CLI Reference](cli.md). Key flags:
 
 ## Adding Packages
 
-Add new packages to an existing monorepo:
+Add new packages to an existing monorepo (see [CLI Commands](cli/commands.md#add) for full details):
 
 === "uvx"
 
@@ -255,10 +255,34 @@ Add new packages to an existing monorepo:
     mpm add app api --docker
     ```
 
+## Adding Features
+
+Add features to an existing project after creation:
+
+```bash
+cd my-project
+
+# Add Docker configuration
+mpm add docker
+
+# Add GitHub Actions CI
+mpm add ci
+
+# Add PyPI publishing workflow
+mpm add pypi
+
+# Add MkDocs documentation
+mpm add docs --theme material
+```
+
+These commands update your [mpm.toml](mpm-toml.md) configuration file. See [CLI Commands](cli/commands.md#add) for details.
+
 ## Next Steps
 
 | Section | Description |
 |---------|-------------|
-| [**Project Structure**](project-structure.md) | See how monorepo and single package layouts are generated |
+| [**CLI Commands**](cli/commands.md) | Full reference for all CLI commands and options |
+| [**mpm.toml**](mpm-toml.md) | Configuration file schema and usage |
+| [**Project Structure**](project-structure.md) | How monorepo and single package layouts are generated |
 | [**Contributing**](contributing.md) | Dev setup and contribution flow |
 | [**FAQ**](faq.md) | Common questions and troubleshooting |

@@ -1,11 +1,14 @@
 """Unit tests for Pydantic configuration models."""
 
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
 from mpm.config import (
     DocsTheme,
     LicenseType,
+    MpmConfig,
     ProjectConfig,
     ProjectStructure,
     PythonVersion,
@@ -119,3 +122,202 @@ def test_invalid_python_version() -> None:
             project_slug="test",
             python_version="2.7",  # type: ignore
         )
+
+
+# MpmConfig tests
+
+
+def test_mpm_config_defaults() -> None:
+    """Test MpmConfig with minimal required fields."""
+    config = MpmConfig(
+        project_name="my_project",
+        project_slug="my-project",
+    )
+    assert config.version == "0.1.0"
+    assert config.structure == ProjectStructure.MONOREPO
+    assert config.python_version == PythonVersion.PY313
+    assert config.license_type == LicenseType.MIT
+    assert config.with_samples is False
+    assert config.with_docker is False
+    assert config.with_ci is False
+    assert config.with_pypi is False
+    assert config.with_docs is False
+    assert config.docs_theme == DocsTheme.MATERIAL
+    assert config.with_precommit is True
+
+
+def test_mpm_config_from_project_config() -> None:
+    """Test creating MpmConfig from ProjectConfig."""
+    project_config = ProjectConfig(
+        project_name="test_project",
+        project_slug="test-project",
+        project_description="A test project",
+        structure=ProjectStructure.MONOREPO,
+        python_version=PythonVersion.PY312,
+        license_type=LicenseType.APACHE,
+        with_samples=True,
+        with_docker=True,
+        with_ci=True,
+        with_pypi=True,
+        with_docs=True,
+        docs_theme=DocsTheme.SHADCN,
+        with_precommit=False,
+        author_name="Test Author",
+        author_email="test@example.com",
+        github_owner="testowner",
+        github_repo="testrepo",
+    )
+
+    mpm_config = MpmConfig.from_project_config(project_config, version="1.0.0")
+
+    assert mpm_config.version == "1.0.0"
+    assert mpm_config.project_name == "test_project"
+    assert mpm_config.project_slug == "test-project"
+    assert mpm_config.project_description == "A test project"
+    assert mpm_config.structure == ProjectStructure.MONOREPO
+    assert mpm_config.python_version == PythonVersion.PY312
+    assert mpm_config.license_type == LicenseType.APACHE
+    assert mpm_config.with_samples is True
+    assert mpm_config.with_docker is True
+    assert mpm_config.with_ci is True
+    assert mpm_config.with_pypi is True
+    assert mpm_config.with_docs is True
+    assert mpm_config.docs_theme == DocsTheme.SHADCN
+    assert mpm_config.with_precommit is False
+    assert mpm_config.author_name == "Test Author"
+    assert mpm_config.author_email == "test@example.com"
+    assert mpm_config.github_owner == "testowner"
+    assert mpm_config.github_repo == "testrepo"
+
+
+def test_mpm_config_to_toml_dict() -> None:
+    """Test converting MpmConfig to TOML dict."""
+    config = MpmConfig(
+        project_name="my_project",
+        project_slug="my-project",
+        project_description="Test description",
+        structure=ProjectStructure.SINGLE,
+        python_version=PythonVersion.PY311,
+        license_type=LicenseType.GPL,
+        with_samples=True,
+        with_docker=True,
+        docs_theme=DocsTheme.MATERIAL,
+    )
+
+    toml_dict = config.to_toml_dict()
+
+    assert toml_dict["mpm"]["version"] == "0.1.0"
+    assert "created_at" in toml_dict["mpm"]
+    assert toml_dict["project"]["name"] == "my_project"
+    assert toml_dict["project"]["slug"] == "my-project"
+    assert toml_dict["project"]["description"] == "Test description"
+    assert toml_dict["generation"]["structure"] == "single"
+    assert toml_dict["generation"]["python_version"] == "3.11"
+    assert toml_dict["generation"]["license"] == "GPL-3.0"
+    assert toml_dict["features"]["samples"] is True
+    assert toml_dict["features"]["docker"] is True
+    assert toml_dict["features"]["docs_theme"] == "material"
+
+
+def test_mpm_config_from_toml(tmp_path: Path) -> None:
+    """Test loading MpmConfig from TOML file."""
+    mpm_toml = tmp_path / "mpm.toml"
+    mpm_toml.write_text("""
+[mpm]
+version = "0.2.0"
+created_at = "2024-01-01T00:00:00"
+
+[project]
+name = "loaded_project"
+slug = "loaded-project"
+description = "Loaded from TOML"
+
+[generation]
+structure = "monorepo"
+python_version = "3.12"
+license = "Apache-2.0"
+
+[features]
+samples = true
+docker = false
+ci = true
+pypi = false
+docs = true
+docs_theme = "shadcn"
+precommit = false
+
+[metadata]
+author_name = "Author Name"
+author_email = "author@example.com"
+github_owner = "owner"
+github_repo = "repo"
+""")
+
+    config = MpmConfig.from_toml(mpm_toml)
+
+    assert config.version == "0.2.0"
+    assert config.project_name == "loaded_project"
+    assert config.project_slug == "loaded-project"
+    assert config.project_description == "Loaded from TOML"
+    assert config.structure == ProjectStructure.MONOREPO
+    assert config.python_version == PythonVersion.PY312
+    assert config.license_type == LicenseType.APACHE
+    assert config.with_samples is True
+    assert config.with_docker is False
+    assert config.with_ci is True
+    assert config.with_pypi is False
+    assert config.with_docs is True
+    assert config.docs_theme == DocsTheme.SHADCN
+    assert config.with_precommit is False
+    assert config.author_name == "Author Name"
+    assert config.author_email == "author@example.com"
+    assert config.github_owner == "owner"
+    assert config.github_repo == "repo"
+
+
+def test_mpm_config_round_trip(tmp_path: Path) -> None:
+    """Test round-trip serialization (create -> save -> load)."""
+    from mpm.utils import load_mpm_config, save_mpm_config
+
+    original = MpmConfig(
+        project_name="roundtrip_project",
+        project_slug="roundtrip-project",
+        project_description="Round trip test",
+        structure=ProjectStructure.MONOREPO,
+        python_version=PythonVersion.PY313,
+        license_type=LicenseType.MIT,
+        with_samples=True,
+        with_docker=True,
+        with_ci=True,
+        with_pypi=True,
+        with_docs=True,
+        docs_theme=DocsTheme.MATERIAL,
+        with_precommit=True,
+        author_name="Test Author",
+        author_email="test@example.com",
+        github_owner="owner",
+        github_repo="repo",
+    )
+
+    mpm_toml = tmp_path / "mpm.toml"
+    save_mpm_config(original, mpm_toml)
+
+    loaded = load_mpm_config(mpm_toml)
+
+    assert loaded.project_name == original.project_name
+    assert loaded.project_slug == original.project_slug
+    assert loaded.project_description == original.project_description
+    assert loaded.structure == original.structure
+    assert loaded.python_version == original.python_version
+    assert loaded.license_type == original.license_type
+    assert loaded.with_samples == original.with_samples
+    assert loaded.with_docker == original.with_docker
+    assert loaded.with_ci == original.with_ci
+    assert loaded.with_pypi == original.with_pypi
+    assert loaded.with_docs == original.with_docs
+    assert loaded.docs_theme == original.docs_theme
+    assert loaded.with_precommit == original.with_precommit
+    assert loaded.author_name == original.author_name
+    assert loaded.author_email == original.author_email
+    assert loaded.github_owner == original.github_owner
+    assert loaded.github_repo == original.github_repo

@@ -211,7 +211,8 @@ def add_interactive(ctx: typer.Context) -> None:
 
         project_root = find_project_root()
         if not project_root:
-            console.print("[red]Error:[/red] Not in a monorepo project. Run from a project with pyproject.toml.")
+            console.print("[red]Error:[/red] No mpm.toml found. This command requires an mpm-managed project.")
+            console.print("[dim]Create a new project with 'mpm new <name>' first.[/dim]")
             raise typer.Exit(1)
 
         package_type = questionary.select(
@@ -243,7 +244,11 @@ def add_interactive(ctx: typer.Context) -> None:
                 or False
             )
 
-        namespace = get_namespace_from_project(project_root) or "my_project"
+        namespace = get_namespace_from_project(project_root)
+        if not namespace:
+            console.print("[red]Error:[/red] Could not read namespace from mpm.toml.")
+            raise typer.Exit(1)
+
         add_package(
             package_name,
             package_type,
@@ -265,10 +270,15 @@ def add_lib(
 
     project_root = find_project_root()
     if not project_root:
-        console.print("[red]Error:[/red] Not in a monorepo project. Run from a project with pyproject.toml.")
+        console.print("[red]Error:[/red] No mpm.toml found. This command requires an mpm-managed project.")
+        console.print("[dim]Create a new project with 'mpm new <name>' first.[/dim]")
         raise typer.Exit(1)
 
-    namespace = get_namespace_from_project(project_root) or "my_project"
+    namespace = get_namespace_from_project(project_root)
+    if not namespace:
+        console.print("[red]Error:[/red] Could not read namespace from mpm.toml.")
+        raise typer.Exit(1)
+
     add_package(name, "lib", description, project_root=project_root, namespace=namespace)
 
 
@@ -284,11 +294,143 @@ def add_app_cmd(
 
     project_root = find_project_root()
     if not project_root:
-        console.print("[red]Error:[/red] Not in a monorepo project. Run from a project with pyproject.toml.")
+        console.print("[red]Error:[/red] No mpm.toml found. This command requires an mpm-managed project.")
+        console.print("[dim]Create a new project with 'mpm new <name>' first.[/dim]")
         raise typer.Exit(1)
 
-    namespace = get_namespace_from_project(project_root) or "my_project"
+    namespace = get_namespace_from_project(project_root)
+    if not namespace:
+        console.print("[red]Error:[/red] Could not read namespace from mpm.toml.")
+        raise typer.Exit(1)
+
     add_package(name, "app", description, with_docker=docker, project_root=project_root, namespace=namespace)
+
+
+@add_app.command("docker")
+def add_docker() -> None:
+    """Add Docker configuration to an existing project."""
+    from mpm.generators.features import add_docker_feature
+    from mpm.utils import find_project_root, load_mpm_config, save_mpm_config
+
+    project_root = find_project_root()
+    if not project_root:
+        console.print("[red]Error:[/red] No mpm.toml found. This command requires an mpm-managed project.")
+        console.print("[dim]Create a new project with 'mpm new <name>' first.[/dim]")
+        raise typer.Exit(1)
+
+    mpm_config_path = project_root / "mpm.toml"
+    mpm_config = load_mpm_config(mpm_config_path)
+
+    if mpm_config.with_docker:
+        console.print("[yellow]Docker is already enabled for this project.[/yellow]")
+        return
+
+    add_docker_feature(project_root, mpm_config)
+
+    # Update mpm.toml
+    mpm_config.with_docker = True
+    save_mpm_config(mpm_config, mpm_config_path)
+
+    console.print("[green]\u2713[/green] Added Docker configuration")
+
+
+@add_app.command("ci")
+def add_ci() -> None:
+    """Add GitHub Actions CI to an existing project."""
+    from mpm.generators.features import add_ci_feature
+    from mpm.utils import find_project_root, load_mpm_config, save_mpm_config
+
+    project_root = find_project_root()
+    if not project_root:
+        console.print("[red]Error:[/red] No mpm.toml found. This command requires an mpm-managed project.")
+        console.print("[dim]Create a new project with 'mpm new <name>' first.[/dim]")
+        raise typer.Exit(1)
+
+    mpm_config_path = project_root / "mpm.toml"
+    mpm_config = load_mpm_config(mpm_config_path)
+
+    if mpm_config.with_ci:
+        console.print("[yellow]CI is already enabled for this project.[/yellow]")
+        return
+
+    add_ci_feature(project_root, mpm_config)
+
+    # Update mpm.toml
+    mpm_config.with_ci = True
+    save_mpm_config(mpm_config, mpm_config_path)
+
+    console.print("[green]\u2713[/green] Added GitHub Actions CI")
+
+
+@add_app.command("pypi")
+def add_pypi() -> None:
+    """Add PyPI publishing workflow to an existing project."""
+    from mpm.generators.features import add_pypi_feature
+    from mpm.utils import find_project_root, load_mpm_config, save_mpm_config
+
+    project_root = find_project_root()
+    if not project_root:
+        console.print("[red]Error:[/red] No mpm.toml found. This command requires an mpm-managed project.")
+        console.print("[dim]Create a new project with 'mpm new <name>' first.[/dim]")
+        raise typer.Exit(1)
+
+    mpm_config_path = project_root / "mpm.toml"
+    mpm_config = load_mpm_config(mpm_config_path)
+
+    if mpm_config.with_pypi:
+        console.print("[yellow]PyPI publishing is already enabled for this project.[/yellow]")
+        return
+
+    if not mpm_config.with_ci:
+        console.print("[yellow]Warning:[/yellow] CI is not enabled. Consider adding CI first with 'mpm add ci'.")
+
+    add_pypi_feature(project_root, mpm_config)
+
+    # Update mpm.toml
+    mpm_config.with_pypi = True
+    save_mpm_config(mpm_config, mpm_config_path)
+
+    console.print("[green]\u2713[/green] Added PyPI publishing workflow")
+
+
+@add_app.command("docs")
+def add_docs(
+    theme: Annotated[str, typer.Option("--theme", "-t", help="Docs theme: material or shadcn")] = "material",
+) -> None:
+    """Add MkDocs documentation to an existing project."""
+    from mpm.config import DocsTheme
+    from mpm.generators.features import add_docs_feature
+    from mpm.utils import find_project_root, load_mpm_config, save_mpm_config
+
+    project_root = find_project_root()
+    if not project_root:
+        console.print("[red]Error:[/red] No mpm.toml found. This command requires an mpm-managed project.")
+        console.print("[dim]Create a new project with 'mpm new <name>' first.[/dim]")
+        raise typer.Exit(1)
+
+    mpm_config_path = project_root / "mpm.toml"
+    mpm_config = load_mpm_config(mpm_config_path)
+
+    if mpm_config.with_docs:
+        console.print("[yellow]Docs are already enabled for this project.[/yellow]")
+        return
+
+    # Parse theme
+    try:
+        docs_theme = DocsTheme(theme)
+    except ValueError:
+        console.print(f"[red]Error:[/red] Invalid theme '{theme}'. Use 'material' or 'shadcn'.")
+        raise typer.Exit(1) from None
+
+    add_docs_feature(project_root, mpm_config, docs_theme)
+
+    # Update mpm.toml
+    mpm_config.with_docs = True
+    mpm_config.docs_theme = docs_theme
+    save_mpm_config(mpm_config, mpm_config_path)
+
+    console.print("[green]\u2713[/green] Added MkDocs documentation")
+    console.print("[dim]Run 'uv run poe docs' to start the docs server[/dim]")
 
 
 if __name__ == "__main__":

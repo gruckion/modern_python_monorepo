@@ -13,7 +13,7 @@ theme:
     light: shadcn-light
     dark: github-dark
   icon: heroicons:rocket-launch
-  topbar_sections: true
+  topbar_sections: false
   show_datetime: true
 
 plugins:
@@ -35,10 +35,16 @@ plugins:
 
 nav:
   - Quick Start: index.md
+  - CLI:
+    - cli/commands.md
+    - cli/options.md
+    - cli/interactive.md
+    - cli/compatibility.md
   - Project Structure: project-structure.md
+  - mpm.toml: mpm-toml.md
   - Technology Choices: technology-choices.md
   - Contributing: contributing.md
-  - FAQ: faq.md
+  - Frequently Asked Questions: faq.md
 
 markdown_extensions:
   - pymdownx.highlight:

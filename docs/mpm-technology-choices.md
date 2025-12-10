@@ -24,7 +24,7 @@ This document outlines the opinionated technology choices made for the Modern Py
 
 **Chosen:** uv (Astral)
 
-**Alternatives**
+### Alternatives
 
 - pip + venv
 - poetry
@@ -32,7 +32,7 @@ This document outlines the opinionated technology choices made for the Modern Py
 - pipenv
 - pyenv (Python version management)
 
-**Why uv?**
+### Justification
 
 **Performance (10-100x faster)**: uv is written in Rust by Astral (the same team behind Ruff). Benchmarks consistently show 10-100x speed improvements over pip for dependency resolution and installation. This is achieved through Rust's memory safety and zero-cost abstractions, parallel downloads/installations, aggressive caching, and an efficient dependency resolution algorithm. For monorepos with dozens of packages, this speed difference is critical for CI/CD pipelines and developer productivity.
 
@@ -53,7 +53,7 @@ This consolidation reduces cognitive overhead and eliminates version mismatches 
 - `uv build --package X` for selective package building
 - `[tool.uv.sources]` for workspace dependency linking
 
-**Why Not the Alternatives?**
+**Why Not Alternatives**:
 
 - **pip**: Slow resolution, no lockfile, needs 4+ additional tools for equivalent functionality
 - **Poetry**: Python-based (slower), poor monorepo support, hybrid config format causes friction
@@ -69,7 +69,7 @@ This consolidation reduces cognitive overhead and eliminates version mismatches 
 
 **Chosen:** Ruff (Astral)
 
-**Alternatives**
+### Alternatives
 
 - black (formatting)
 - isort (import sorting)
@@ -80,7 +80,7 @@ This consolidation reduces cognitive overhead and eliminates version mismatches 
 - pyflakes (linting)
 - pycodestyle (linting)
 
-**Why Ruff?**
+### Justification
 
 **Performance (10-100x faster)**: Ruff is written in Rust and processes code 10-100x faster than Python-based linters. On large codebases where black+isort+flake8 might take 30+ seconds, Ruff completes in under 1 second. This enables real-time IDE linting, instant pre-commit hooks, and faster CI pipelines.
 
@@ -103,7 +103,7 @@ This consolidation reduces cognitive overhead and eliminates version mismatches 
 
 **Auto-fix Capability**: Most issues are auto-fixable via `ruff check --fix`, dramatically improving developer experience compared to manual fixes.
 
-**Why Not the Alternatives?**
+**Why Not Alternatives**:
 
 - **black**: Formatting only, no linting. `ruff format` is black-compatible but faster
 - **isort**: Import sorting only; Ruff includes these rules natively
@@ -119,14 +119,14 @@ This consolidation reduces cognitive overhead and eliminates version mismatches 
 
 **Chosen:** prek
 
-**Alternatives**
+### Alternatives
 
 - pre-commit (Python-based)
 - husky (Node.js)
 - lefthook (Go)
 - overcommit (Ruby)
 
-**Why prek?**
+### Justification
 
 **Rust-Native Performance**: prek is a Rust-based pre-commit alternative that executes hooks faster than Python-based pre-commit. For commit-time hooks where developer patience is limited, this speed matters.
 
@@ -146,7 +146,7 @@ These run without downloading external tools, enabling offline development and f
 
 **Ruff Integration**: The `ruff-pre-commit` hooks work seamlessly with prek, combining Rust-based linting with Rust-based hook execution.
 
-**Why Not the Alternatives?**
+**Why Not Alternatives**:
 
 - **pre-commit**: Python-based (slower), requires Python environment, downloads tools on first run
 - **husky**: Node.js-based, introduces JavaScript dependency to Python project
@@ -161,14 +161,14 @@ These run without downloading external tools, enabling offline development and f
 
 **Chosen:** pytest
 
-**Alternatives**
+### Alternatives
 
 - unittest (stdlib)
 - nose/nose2
 - doctest (stdlib)
 - hypothesis (property-based)
 
-**Why pytest?**
+### Justification
 
 **Industry Standard**: pytest has 90%+ adoption in modern Python projects. It has effectively won the Python testing framework competition.
 
@@ -201,7 +201,7 @@ def db_connection():
 
 **Monorepo Friendly**: `testpaths = ["apps", "libs"]` discovers tests across workspace.
 
-**Why Not the Alternatives?**
+**Why Not Alternatives**:
 
 - **unittest**: Verbose xUnit style, no fixtures, limited assertions
 - **nose/nose2**: Effectively deprecated, unmaintained
@@ -213,7 +213,7 @@ def db_connection():
 
 **Chosen:** MkDocs (with Material or Shadcn theme)
 
-**Alternatives**
+### Alternatives
 
 - Sphinx
 - pdoc
@@ -221,7 +221,7 @@ def db_connection():
 - mkdocstrings
 - Docusaurus
 
-**Why MkDocs?**
+### Justification
 
 **Markdown-First**: MkDocs uses Markdown, which is more widely known than Sphinx's reStructuredText. Lower barrier to entry for contributors.
 
@@ -250,7 +250,7 @@ plugins:
 
 **API Documentation**: mkdocstrings generates API docs from Python docstrings, supporting Google, NumPy, and Sphinx docstring styles.
 
-**Why Not the Alternatives?**
+**Why Not Alternatives**:
 
 - **Sphinx**: reStructuredText learning curve, dated default themes, complex configuration
 - **pdoc**: Limited customization, no theme ecosystem
@@ -263,14 +263,14 @@ plugins:
 
 **Chosen:** ty (Astral)
 
-**Alternatives**
+### Alternatives
 
 - mypy
 - pyright
 - pytype (Google)
 - pyre (Meta)
 
-**Why ty?**
+### Justification
 
 **Rust Performance**: ty is Astral's new Rust-based type checker, offering 10-100x speed improvements over Python-based mypy. For large codebases, this means type checking in seconds instead of minutes.
 
@@ -280,7 +280,7 @@ plugins:
 
 **Forward-Looking Choice**: While ty is still in alpha (as of 2025), MPM is designed for modern projects. Early adoption positions projects for the future of Python type checking.
 
-**Why Not the Alternatives?**
+**Why Not Alternatives**:
 
 - **mypy**: Established but Python-based (slow), complex configuration
 - **pyright**: Fast (TypeScript-based), powers Pylance, but separate from Astral ecosystem
@@ -295,13 +295,13 @@ plugins:
 
 **Chosen:** pyproject.toml (PEP 517/518/621)
 
-**Alternatives**
+### Alternatives
 
 - requirements.txt + setup.py
 - setup.cfg + setup.py
 - Pipfile (pipenv)
 
-**Why pyproject.toml?**
+### Justification
 
 **Modern Python Standard**: pyproject.toml is standardized by PEP 517 (build system), PEP 518 (build requirements), and PEP 621 (project metadata). All modern Python tools support it.
 
@@ -330,7 +330,7 @@ dev = ["pytest", "ruff", "ty"]
 docs = ["mkdocs", "mkdocs-material"]
 ```
 
-**Why Not the Alternatives?**
+**Why Not Alternatives**:
 
 - **requirements.txt**: No metadata, no dependency resolution, multiple files needed
 - **setup.py**: Executable code (security risk), legacy format
@@ -343,14 +343,14 @@ docs = ["mkdocs", "mkdocs-material"]
 
 **Chosen:** docker buildx bake (with HCL)
 
-**Alternatives**
+### Alternatives
 
 - docker build
 - docker-compose build
 - kaniko
 - buildah
 
-**Why docker-bake?**
+### Justification
 
 **Parallel Multi-Target Builds**: docker-bake builds multiple targets concurrently. In a monorepo with 5 apps, this can reduce build time by 80%.
 
@@ -387,7 +387,7 @@ target "app-dev" {
 
 **Variable Substitution**: Dynamic tags, registry URLs, and Python versions via variables.
 
-**Why Not the Alternatives?**
+**Why Not Alternatives**:
 
 - **docker build**: Single target, no parallelism, manual multi-platform handling
 - **docker-compose build**: Sequential builds, limited caching control
@@ -400,7 +400,7 @@ target "app-dev" {
 
 **Chosen:** Poe the Poet (poethepoet)
 
-**Alternatives**
+### Alternatives
 
 - Makefile
 - invoke
@@ -409,7 +409,7 @@ target "app-dev" {
 - just
 - taskfile
 
-**Why Poe the Poet?**
+### Justification
 
 **pyproject.toml Native**: Tasks defined directly in `[tool.poe.tasks]`, no separate file:
 
@@ -439,7 +439,7 @@ uv run poe test      # local
 uv run poe ci:lint   # CI (stricter)
 ```
 
-**Why Not the Alternatives?**
+**Why Not Alternatives**:
 
 - **Makefile**: Unix-only, requires make installation, shell syntax quirks
 - **invoke**: Requires separate tasks.py file, Python function syntax
@@ -453,14 +453,14 @@ uv run poe ci:lint   # CI (stricter)
 
 **Chosen:** hatchling (with uv build)
 
-**Alternatives**
+### Alternatives
 
 - setuptools
 - flit
 - pdm-backend
 - maturin (Rust extensions)
 
-**Why hatchling?**
+### Justification
 
 **Modern, Fast Build Backend**: hatchling is Hatch's PEP 517-compliant build backend, designed for modern Python packaging.
 
@@ -487,7 +487,7 @@ build-backend = "hatchling.build"
 
 **uv build Integration**: `uv build` uses whatever backend is specified in pyproject.toml, so hatchling works seamlessly.
 
-**Why Not the Alternatives?**
+**Why Not Alternatives**:
 
 - **setuptools**: Legacy, complex, backward-compatibility baggage, verbose config
 - **flit**: Simple but limited (no build hooks, no plugins for monorepo support)
@@ -500,7 +500,7 @@ build-backend = "hatchling.build"
 
 **Chosen:** una
 
-**Alternatives**
+### Alternatives
 
 - pants
 - bazel
@@ -508,7 +508,7 @@ build-backend = "hatchling.build"
 - lerna (Node.js)
 - turborepo (Node.js)
 
-**Why una?**
+### Justification
 
 **Lightweight Python Monorepo Solution**: una is designed specifically for Python monorepos using uv workspaces, without the complexity of enterprise build systems.
 
@@ -526,7 +526,7 @@ namespace = "myorg"
 
 **Namespace Package Support**: Enables shared namespaces across packages:
 
-```text
+```
 myorg.app1  (apps/app1)
 myorg.app2  (apps/app2)
 myorg.lib1  (libs/lib1)
@@ -536,7 +536,7 @@ myorg.lib1  (libs/lib1)
 
 **Right-Sized Solution**: For small-to-medium monorepos (2-20 packages), una provides the benefits without the overhead.
 
-**Why Not the Alternatives?**
+**Why Not Alternatives**:
 
 - **pants**: Powerful but massive complexity, steep learning curve, overkill for most Python projects
 - **bazel**: Google's build system, extremely complex, primarily for huge codebases

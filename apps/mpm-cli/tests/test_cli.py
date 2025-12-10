@@ -71,6 +71,39 @@ def test_add_app_help(cli_runner: CliRunner) -> None:
     assert "--docker" in output
 
 
+def test_add_docker_help(cli_runner: CliRunner) -> None:
+    """Test mpm add docker --help."""
+    result = cli_runner.invoke(app, ["add", "docker", "--help"])
+    assert result.exit_code == 0
+    output = strip_ansi(result.stdout)
+    assert "Docker configuration" in output
+
+
+def test_add_ci_help(cli_runner: CliRunner) -> None:
+    """Test mpm add ci --help."""
+    result = cli_runner.invoke(app, ["add", "ci", "--help"])
+    assert result.exit_code == 0
+    output = strip_ansi(result.stdout)
+    assert "GitHub Actions CI" in output
+
+
+def test_add_pypi_help(cli_runner: CliRunner) -> None:
+    """Test mpm add pypi --help."""
+    result = cli_runner.invoke(app, ["add", "pypi", "--help"])
+    assert result.exit_code == 0
+    output = strip_ansi(result.stdout)
+    assert "PyPI publishing" in output
+
+
+def test_add_docs_help(cli_runner: CliRunner) -> None:
+    """Test mpm add docs --help."""
+    result = cli_runner.invoke(app, ["add", "docs", "--help"])
+    assert result.exit_code == 0
+    output = strip_ansi(result.stdout)
+    assert "MkDocs documentation" in output
+    assert "--theme" in output
+
+
 def test_basic_monorepo_creation(cli_runner: CliRunner, temp_dir) -> None:
     """Test basic monorepo creation with mpm new."""
     os.chdir(temp_dir)

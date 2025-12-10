@@ -1,8 +1,102 @@
 """Integration tests for MPM CLI - tests full CLI execution with various configs."""
 
+import tomllib
 from typing import Any
 
 import pytest
+
+
+class TestMpmTomlGeneration:
+    """Test mpm.toml configuration file generation."""
+
+    def test_mpm_toml_generated(self, run_mpm: Any) -> None:
+        """Test that mpm.toml is generated with project."""
+        exit_code, _output, project = run_mpm("test-project", "--monorepo", "-y")
+
+        assert exit_code == 0
+        assert (project / "mpm.toml").exists()
+
+    def test_mpm_toml_content(self, run_mpm: Any) -> None:
+        """Test mpm.toml content matches project config."""
+        exit_code, _output, project = run_mpm(
+            "config-project",
+            "--monorepo",
+            "--with-samples",
+            "--with-docker",
+            "-y",
+        )
+
+        assert exit_code == 0
+        mpm_toml = project / "mpm.toml"
+        assert mpm_toml.exists()
+
+        with open(mpm_toml, "rb") as f:
+            config = tomllib.load(f)
+
+        assert config["project"]["name"] == "config_project"
+        assert config["project"]["slug"] == "config-project"
+        assert config["generation"]["structure"] == "monorepo"
+        assert config["generation"]["python_version"] == "3.13"
+        assert config["features"]["samples"] is True
+        assert config["features"]["docker"] is True
+        assert config["features"]["ci"] is False
+
+    def test_mpm_toml_single_package(self, run_mpm: Any) -> None:
+        """Test mpm.toml for single package project."""
+        exit_code, _output, project = run_mpm("single-project", "--single", "-y")
+
+        assert exit_code == 0
+        mpm_toml = project / "mpm.toml"
+        assert mpm_toml.exists()
+
+        with open(mpm_toml, "rb") as f:
+            config = tomllib.load(f)
+
+        assert config["generation"]["structure"] == "single"
+
+    def test_mpm_toml_has_header_comment(self, run_mpm: Any) -> None:
+        """Test that mpm.toml has header comment."""
+        exit_code, _output, project = run_mpm("header-project", "--monorepo", "-y")
+
+        assert exit_code == 0
+        content = (project / "mpm.toml").read_text()
+
+        assert "# mpm.toml - Modern Python Monorepo Configuration" in content
+
+    def test_mpm_toml_has_mpm_version(self, run_mpm: Any) -> None:
+        """Test that mpm.toml contains mpm version."""
+        exit_code, _output, project = run_mpm("version-project", "--monorepo", "-y")
+
+        assert exit_code == 0
+
+        with open(project / "mpm.toml", "rb") as f:
+            config = tomllib.load(f)
+
+        assert "mpm" in config
+        assert "version" in config["mpm"]
+        assert config["mpm"]["version"] == "0.1.0"
+
+    def test_mpm_toml_python_version(self, run_mpm: Any) -> None:
+        """Test mpm.toml respects --python flag."""
+        exit_code, _output, project = run_mpm("py312-project", "--monorepo", "--python", "3.12", "-y")
+
+        assert exit_code == 0
+
+        with open(project / "mpm.toml", "rb") as f:
+            config = tomllib.load(f)
+
+        assert config["generation"]["python_version"] == "3.12"
+
+    def test_mpm_toml_license(self, run_mpm: Any) -> None:
+        """Test mpm.toml respects --license flag."""
+        exit_code, _output, project = run_mpm("apache-project", "--monorepo", "--license", "Apache-2.0", "-y")
+
+        assert exit_code == 0
+
+        with open(project / "mpm.toml", "rb") as f:
+            config = tomllib.load(f)
+
+        assert config["generation"]["license"] == "Apache-2.0"
 
 
 class TestMonorepoGeneration:
@@ -241,7 +335,7 @@ class TestGeneratedFileContents:
 
     def test_pyproject_toml_content(self, run_mpm: Any) -> None:
         """Verify pyproject.toml has correct structure."""
-        exit_code, output, project = run_mpm("content-test", "--monorepo", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("content-test", "--monorepo", "--with-samples", "-y")
 
         assert exit_code == 0
 
@@ -262,7 +356,7 @@ class TestGeneratedFileContents:
 
     def test_namespace_consistency(self, run_mpm: Any) -> None:
         """Verify namespace is consistent across all files."""
-        exit_code, output, project = run_mpm("my-namespace-test", "--monorepo", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("my-namespace-test", "--monorepo", "--with-samples", "-y")
 
         assert exit_code == 0
 
@@ -278,7 +372,7 @@ class TestGeneratedFileContents:
 
     def test_greeter_has_cowsay_dependency(self, run_mpm: Any) -> None:
         """Test that greeter sample has cowsay dependency."""
-        exit_code, output, project = run_mpm("cowsay-test", "--monorepo", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("cowsay-test", "--monorepo", "--with-samples", "-y")
 
         assert exit_code == 0
 
@@ -287,7 +381,7 @@ class TestGeneratedFileContents:
 
     def test_printer_depends_on_greeter(self, run_mpm: Any) -> None:
         """Test that printer sample depends on greeter."""
-        exit_code, output, project = run_mpm("dep-test", "--monorepo", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("dep-test", "--monorepo", "--with-samples", "-y")
 
         assert exit_code == 0
 
@@ -301,7 +395,7 @@ class TestBugFixes:
 
     def test_license_has_markdown_header(self, run_mpm: Any) -> None:
         """Verify LICENSE file has markdown header (A.7 fix)."""
-        exit_code, output, project = run_mpm("license-header-test", "--monorepo", "--license", "MIT", "-y")
+        exit_code, _output, project = run_mpm("license-header-test", "--monorepo", "--license", "MIT", "-y")
 
         assert exit_code == 0
         license_content = (project / "LICENSE").read_text()
@@ -311,7 +405,7 @@ class TestBugFixes:
         """Verify LICENSE file has current year (A.7 fix)."""
         from datetime import datetime
 
-        exit_code, output, project = run_mpm("license-year-test", "--monorepo", "-y")
+        exit_code, _output, project = run_mpm("license-year-test", "--monorepo", "-y")
 
         assert exit_code == 0
         license_content = (project / "LICENSE").read_text()
@@ -320,7 +414,7 @@ class TestBugFixes:
 
     def test_license_has_project_name(self, run_mpm: Any) -> None:
         """Verify LICENSE file has project name in copyright (A.7 fix)."""
-        exit_code, output, project = run_mpm("my-cool-project", "--monorepo", "-y")
+        exit_code, _output, project = run_mpm("my-cool-project", "--monorepo", "-y")
 
         assert exit_code == 0
         license_content = (project / "LICENSE").read_text()
@@ -329,7 +423,7 @@ class TestBugFixes:
 
     def test_precommit_has_header_comment(self, run_mpm: Any) -> None:
         """Verify .pre-commit-config.yaml has prek header comment (A.6 fix)."""
-        exit_code, output, project = run_mpm("precommit-test", "--monorepo", "-y")
+        exit_code, _output, project = run_mpm("precommit-test", "--monorepo", "-y")
 
         assert exit_code == 0
         precommit = (project / ".pre-commit-config.yaml").read_text()
@@ -338,7 +432,7 @@ class TestBugFixes:
 
     def test_precommit_has_ruff_config_args(self, run_mpm: Any) -> None:
         """Verify .pre-commit-config.yaml has --config=pyproject.toml for ruff (A.6 fix)."""
-        exit_code, output, project = run_mpm("ruff-args-test", "--monorepo", "-y")
+        exit_code, _output, project = run_mpm("ruff-args-test", "--monorepo", "-y")
 
         assert exit_code == 0
         precommit = (project / ".pre-commit-config.yaml").read_text()
@@ -346,7 +440,7 @@ class TestBugFixes:
 
     def test_precommit_has_check_toml(self, run_mpm: Any) -> None:
         """Verify .pre-commit-config.yaml has check-toml hook (A.6 fix)."""
-        exit_code, output, project = run_mpm("check-toml-test", "--monorepo", "-y")
+        exit_code, _output, project = run_mpm("check-toml-test", "--monorepo", "-y")
 
         assert exit_code == 0
         precommit = (project / ".pre-commit-config.yaml").read_text()
@@ -354,7 +448,7 @@ class TestBugFixes:
 
     def test_precommit_has_maxkb_arg(self, run_mpm: Any) -> None:
         """Verify .pre-commit-config.yaml has --maxkb=1000 for large files (A.6 fix)."""
-        exit_code, output, project = run_mpm("maxkb-test", "--monorepo", "-y")
+        exit_code, _output, project = run_mpm("maxkb-test", "--monorepo", "-y")
 
         assert exit_code == 0
         precommit = (project / ".pre-commit-config.yaml").read_text()
@@ -362,7 +456,7 @@ class TestBugFixes:
 
     def test_precommit_uses_builtin_hooks(self, run_mpm: Any) -> None:
         """Verify .pre-commit-config.yaml uses builtin repo for prek (A.6 fix)."""
-        exit_code, output, project = run_mpm("builtin-test", "--monorepo", "-y")
+        exit_code, _output, project = run_mpm("builtin-test", "--monorepo", "-y")
 
         assert exit_code == 0
         precommit = (project / ".pre-commit-config.yaml").read_text()
@@ -370,7 +464,7 @@ class TestBugFixes:
 
     def test_printer_import_is_correct(self, run_mpm: Any) -> None:
         """Verify printer __init__.py uses correct import (A.5 fix)."""
-        exit_code, output, project = run_mpm("import-test", "--monorepo", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("import-test", "--monorepo", "--with-samples", "-y")
 
         assert exit_code == 0
         printer_init = (project / "apps" / "printer" / "import_test" / "printer" / "__init__.py").read_text()
@@ -381,7 +475,7 @@ class TestBugFixes:
         """Verify pr.yml has no YAML syntax errors (A.3 fix)."""
         import yaml
 
-        exit_code, output, project = run_mpm("pr-yml-test", "--monorepo", "--with-ci", "-y")
+        exit_code, _output, project = run_mpm("pr-yml-test", "--monorepo", "--with-ci", "-y")
 
         assert exit_code == 0
         pr_yml_path = project / ".github" / "workflows" / "pr.yml"
@@ -393,7 +487,7 @@ class TestBugFixes:
 
     def test_pryml_has_lockfile_check(self, run_mpm: Any) -> None:
         """Verify pr.yml has lockfile check step (A.3 fix)."""
-        exit_code, output, project = run_mpm("lockfile-test", "--monorepo", "--with-ci", "-y")
+        exit_code, _output, project = run_mpm("lockfile-test", "--monorepo", "--with-ci", "-y")
 
         assert exit_code == 0
         pr_yml = (project / ".github" / "workflows" / "pr.yml").read_text()
@@ -401,7 +495,7 @@ class TestBugFixes:
 
     def test_pryll_has_prek_action(self, run_mpm: Any) -> None:
         """Verify pr.yml has prek action (A.3 fix)."""
-        exit_code, output, project = run_mpm("prek-action-test", "--monorepo", "--with-ci", "-y")
+        exit_code, _output, project = run_mpm("prek-action-test", "--monorepo", "--with-ci", "-y")
 
         assert exit_code == 0
         pr_yml = (project / ".github" / "workflows" / "pr.yml").read_text()
@@ -409,7 +503,7 @@ class TestBugFixes:
 
     def test_gitignore_is_minimal(self, run_mpm: Any) -> None:
         """Verify .gitignore is not bloated (issue 10 fix)."""
-        exit_code, output, project = run_mpm("gitignore-test", "--monorepo", "-y")
+        exit_code, _output, project = run_mpm("gitignore-test", "--monorepo", "-y")
 
         assert exit_code == 0
         gitignore_lines = (project / ".gitignore").read_text().strip().split("\n")
@@ -418,7 +512,7 @@ class TestBugFixes:
 
     def test_gitignore_does_not_ignore_python_version(self, run_mpm: Any) -> None:
         """Verify .gitignore does not ignore .python-version (issue 10 fix)."""
-        exit_code, output, project = run_mpm("pyversion-test", "--monorepo", "-y")
+        exit_code, _output, project = run_mpm("pyversion-test", "--monorepo", "-y")
 
         assert exit_code == 0
         gitignore = (project / ".gitignore").read_text()
@@ -426,7 +520,7 @@ class TestBugFixes:
 
     def test_dockerignore_is_minimal(self, run_mpm: Any) -> None:
         """Verify .dockerignore is not bloated (issue 15 fix)."""
-        exit_code, output, project = run_mpm("dockerignore-test", "--monorepo", "--with-docker", "-y")
+        exit_code, _output, project = run_mpm("dockerignore-test", "--monorepo", "--with-docker", "-y")
 
         assert exit_code == 0
         dockerignore_lines = (project / ".dockerignore").read_text().strip().split("\n")
@@ -435,7 +529,7 @@ class TestBugFixes:
 
     def test_namespace_level_py_typed_exists(self, run_mpm: Any) -> None:
         """Verify namespace-level py.typed markers exist (issue 7 fix)."""
-        exit_code, output, project = run_mpm("pytyped-test", "--monorepo", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("pytyped-test", "--monorepo", "--with-samples", "-y")
 
         assert exit_code == 0
 
@@ -445,7 +539,7 @@ class TestBugFixes:
 
     def test_vscode_config_exists(self, run_mpm: Any) -> None:
         """Verify .vscode directory is created (issue 13 fix)."""
-        exit_code, output, project = run_mpm("vscode-test", "--monorepo", "-y")
+        exit_code, _output, project = run_mpm("vscode-test", "--monorepo", "-y")
 
         assert exit_code == 0
         assert (project / ".vscode").is_dir()
@@ -454,7 +548,7 @@ class TestBugFixes:
 
     def test_pyproject_has_mermaid_plugin(self, run_mpm: Any) -> None:
         """Verify pyproject.toml includes mermaid plugin in docs deps (A.1 fix)."""
-        exit_code, output, project = run_mpm("mermaid-test", "--monorepo", "--with-docs", "-y")
+        exit_code, _output, project = run_mpm("mermaid-test", "--monorepo", "--with-docs", "-y")
 
         assert exit_code == 0
         pyproject = (project / "pyproject.toml").read_text()
@@ -462,7 +556,7 @@ class TestBugFixes:
 
     def test_pyproject_has_hooks_task(self, run_mpm: Any) -> None:
         """Verify pyproject.toml has prek hooks task (A.1 fix)."""
-        exit_code, output, project = run_mpm("hooks-test", "--monorepo", "-y")
+        exit_code, _output, project = run_mpm("hooks-test", "--monorepo", "-y")
 
         assert exit_code == 0
         pyproject = (project / "pyproject.toml").read_text()
@@ -471,7 +565,7 @@ class TestBugFixes:
 
     def test_mkdocs_has_edit_uri(self, run_mpm: Any) -> None:
         """Verify mkdocs.yml has edit_uri (A.2 fix)."""
-        exit_code, output, project = run_mpm("edituri-test", "--monorepo", "--with-docs", "-y")
+        exit_code, _output, project = run_mpm("edituri-test", "--monorepo", "--with-docs", "-y")
 
         assert exit_code == 0
         mkdocs = (project / "mkdocs.yml").read_text()
@@ -479,7 +573,7 @@ class TestBugFixes:
 
     def test_mkdocs_has_mermaid2_plugin(self, run_mpm: Any) -> None:
         """Verify mkdocs.yml has mermaid2 plugin (A.2 fix)."""
-        exit_code, output, project = run_mpm("mermaid2-test", "--monorepo", "--with-docs", "-y")
+        exit_code, _output, project = run_mpm("mermaid2-test", "--monorepo", "--with-docs", "-y")
 
         assert exit_code == 0
         mkdocs = (project / "mkdocs.yml").read_text()
@@ -487,7 +581,7 @@ class TestBugFixes:
 
     def test_dockerfile_has_cache_mounts(self, run_mpm: Any) -> None:
         """Verify Dockerfile has BuildKit cache mounts (A.4 fix)."""
-        exit_code, output, project = run_mpm("cache-test", "--monorepo", "--with-docker", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("cache-test", "--monorepo", "--with-docker", "--with-samples", "-y")
 
         assert exit_code == 0
         dockerfile = (project / "apps" / "printer" / "Dockerfile").read_text()
@@ -495,7 +589,7 @@ class TestBugFixes:
 
     def test_dockerfile_has_pinned_uv(self, run_mpm: Any) -> None:
         """Verify Dockerfile has pinned uv version (A.4 fix)."""
-        exit_code, output, project = run_mpm("uv-pin-test", "--monorepo", "--with-docker", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("uv-pin-test", "--monorepo", "--with-docker", "--with-samples", "-y")
 
         assert exit_code == 0
         dockerfile = (project / "apps" / "printer" / "Dockerfile").read_text()
@@ -503,7 +597,7 @@ class TestBugFixes:
 
     def test_dockerfile_no_git_install(self, run_mpm: Any) -> None:
         """Verify Dockerfile doesn't install git (A.4 fix)."""
-        exit_code, output, project = run_mpm("nogit-test", "--monorepo", "--with-docker", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("nogit-test", "--monorepo", "--with-docker", "--with-samples", "-y")
 
         assert exit_code == 0
         dockerfile = (project / "apps" / "printer" / "Dockerfile").read_text()
@@ -511,7 +605,7 @@ class TestBugFixes:
 
     def test_docker_compose_no_deprecated_version(self, run_mpm: Any) -> None:
         """Verify docker-compose.yml doesn't use deprecated version key."""
-        exit_code, output, project = run_mpm("compose-ver", "--monorepo", "--with-docker", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("compose-ver", "--monorepo", "--with-docker", "--with-samples", "-y")
 
         assert exit_code == 0
         compose = (project / "docker-compose.yml").read_text()
@@ -519,7 +613,7 @@ class TestBugFixes:
 
     def test_docker_compose_has_buildkit_cache(self, run_mpm: Any) -> None:
         """Verify docker-compose.yml has BuildKit cache configuration."""
-        exit_code, output, project = run_mpm("compose-cache", "--monorepo", "--with-docker", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("compose-cache", "--monorepo", "--with-docker", "--with-samples", "-y")
 
         assert exit_code == 0
         compose = (project / "docker-compose.yml").read_text()
@@ -528,7 +622,7 @@ class TestBugFixes:
 
     def test_docker_compose_has_image_tags(self, run_mpm: Any) -> None:
         """Verify docker-compose.yml has image tag definitions."""
-        exit_code, output, project = run_mpm("compose-img", "--monorepo", "--with-docker", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("compose-img", "--monorepo", "--with-docker", "--with-samples", "-y")
 
         assert exit_code == 0
         compose = (project / "docker-compose.yml").read_text()
@@ -537,7 +631,7 @@ class TestBugFixes:
 
     def test_docker_compose_has_dev_service(self, run_mpm: Any) -> None:
         """Verify docker-compose.yml has printer-dev development service."""
-        exit_code, output, project = run_mpm("compose-dev", "--monorepo", "--with-docker", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("compose-dev", "--monorepo", "--with-docker", "--with-samples", "-y")
 
         assert exit_code == 0
         compose = (project / "docker-compose.yml").read_text()
@@ -548,7 +642,7 @@ class TestBugFixes:
 
     def test_docker_bake_has_variables(self, run_mpm: Any) -> None:
         """Verify docker-bake.hcl has TAG, REGISTRY, PYTHON_VERSION variables."""
-        exit_code, output, project = run_mpm("bake-vars", "--monorepo", "--with-docker", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("bake-vars", "--monorepo", "--with-docker", "--with-samples", "-y")
 
         assert exit_code == 0
         bake = (project / "docker-bake.hcl").read_text()
@@ -558,7 +652,7 @@ class TestBugFixes:
 
     def test_docker_bake_has_ci_target(self, run_mpm: Any) -> None:
         """Verify docker-bake.hcl has ci target with GHA cache."""
-        exit_code, output, project = run_mpm("bake-ci", "--monorepo", "--with-docker", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("bake-ci", "--monorepo", "--with-docker", "--with-samples", "-y")
 
         assert exit_code == 0
         bake = (project / "docker-bake.hcl").read_text()
@@ -567,7 +661,7 @@ class TestBugFixes:
 
     def test_docker_bake_has_dev_target(self, run_mpm: Any) -> None:
         """Verify docker-bake.hcl has printer-dev target."""
-        exit_code, output, project = run_mpm("bake-dev", "--monorepo", "--with-docker", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("bake-dev", "--monorepo", "--with-docker", "--with-samples", "-y")
 
         assert exit_code == 0
         bake = (project / "docker-bake.hcl").read_text()
@@ -575,7 +669,7 @@ class TestBugFixes:
 
     def test_release_yml_has_per_package_tags(self, run_mpm: Any) -> None:
         """Verify release.yml has per-package release tags."""
-        exit_code, output, project = run_mpm(
+        exit_code, _output, project = run_mpm(
             "rel-tags", "--monorepo", "--with-ci", "--with-pypi", "--with-samples", "-y"
         )
 
@@ -586,7 +680,7 @@ class TestBugFixes:
 
     def test_release_yml_has_workflow_dispatch(self, run_mpm: Any) -> None:
         """Verify release.yml has workflow_dispatch for manual releases."""
-        exit_code, output, project = run_mpm(
+        exit_code, _output, project = run_mpm(
             "rel-dispatch", "--monorepo", "--with-ci", "--with-pypi", "--with-samples", "-y"
         )
 
@@ -596,7 +690,7 @@ class TestBugFixes:
 
     def test_release_yml_has_test_pypi(self, run_mpm: Any) -> None:
         """Verify release.yml has TestPyPI support."""
-        exit_code, output, project = run_mpm(
+        exit_code, _output, project = run_mpm(
             "rel-testpypi", "--monorepo", "--with-ci", "--with-pypi", "--with-samples", "-y"
         )
 
@@ -607,7 +701,7 @@ class TestBugFixes:
 
     def test_release_yml_has_per_package_builds(self, run_mpm: Any) -> None:
         """Verify release.yml builds packages separately."""
-        exit_code, output, project = run_mpm(
+        exit_code, _output, project = run_mpm(
             "rel-builds", "--monorepo", "--with-ci", "--with-pypi", "--with-samples", "-y"
         )
 
@@ -619,7 +713,7 @@ class TestBugFixes:
     # README.md tests
     def test_readme_has_ci_badges(self, run_mpm: Any) -> None:
         """Verify README.md has CI badges when CI is enabled."""
-        exit_code, output, project = run_mpm("readme-badges", "--monorepo", "--with-ci", "-y")
+        exit_code, _output, project = run_mpm("readme-badges", "--monorepo", "--with-ci", "-y")
 
         assert exit_code == 0
         readme = (project / "README.md").read_text()
@@ -628,7 +722,7 @@ class TestBugFixes:
 
     def test_readme_has_license_badge(self, run_mpm: Any) -> None:
         """Verify README.md has license badge."""
-        exit_code, output, project = run_mpm("readme-lic-badge", "--monorepo", "-y")
+        exit_code, _output, project = run_mpm("readme-lic-badge", "--monorepo", "-y")
 
         assert exit_code == 0
         readme = (project / "README.md").read_text()
@@ -636,7 +730,7 @@ class TestBugFixes:
 
     def test_readme_has_prek_note(self, run_mpm: Any) -> None:
         """Verify README.md has prek note when precommit is enabled."""
-        exit_code, output, project = run_mpm("readme-prek", "--monorepo", "-y")
+        exit_code, _output, project = run_mpm("readme-prek", "--monorepo", "-y")
 
         assert exit_code == 0
         readme = (project / "README.md").read_text()
@@ -645,7 +739,7 @@ class TestBugFixes:
 
     def test_readme_has_technology_stack(self, run_mpm: Any) -> None:
         """Verify README.md has technology stack table."""
-        exit_code, output, project = run_mpm("readme-tech", "--monorepo", "-y")
+        exit_code, _output, project = run_mpm("readme-tech", "--monorepo", "-y")
 
         assert exit_code == 0
         readme = (project / "README.md").read_text()
@@ -654,7 +748,7 @@ class TestBugFixes:
 
     def test_readme_has_repository_layout(self, run_mpm: Any) -> None:
         """Verify README.md has repository layout for monorepo."""
-        exit_code, output, project = run_mpm("readme-layout", "--monorepo", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("readme-layout", "--monorepo", "--with-samples", "-y")
 
         assert exit_code == 0
         readme = (project / "README.md").read_text()
@@ -665,7 +759,7 @@ class TestBugFixes:
 
     def test_readme_has_commands_table(self, run_mpm: Any) -> None:
         """Verify README.md has development commands table."""
-        exit_code, output, project = run_mpm("readme-cmds", "--monorepo", "-y")
+        exit_code, _output, project = run_mpm("readme-cmds", "--monorepo", "-y")
 
         assert exit_code == 0
         readme = (project / "README.md").read_text()
@@ -676,7 +770,7 @@ class TestBugFixes:
     # Package pyproject.toml tests
     def test_package_pyproject_has_una_comment(self, run_mpm: Any) -> None:
         """Verify package pyproject.toml has una metadata hook comment."""
-        exit_code, output, project = run_mpm("pkg-una-comment", "--monorepo", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("pkg-una-comment", "--monorepo", "--with-samples", "-y")
 
         assert exit_code == 0
         greeter_pyproject = (project / "libs" / "greeter" / "pyproject.toml").read_text()
@@ -685,7 +779,7 @@ class TestBugFixes:
     # Sample package tests
     def test_printer_calls_greet_without_args(self, run_mpm: Any) -> None:
         """Verify printer sample calls greet() without arguments (matching reference)."""
-        exit_code, output, project = run_mpm("printer-greet", "--monorepo", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("printer-greet", "--monorepo", "--with-samples", "-y")
 
         assert exit_code == 0
         printer_init = (project / "apps" / "printer" / "printer_greet" / "printer" / "__init__.py").read_text()
@@ -695,7 +789,7 @@ class TestBugFixes:
 
     def test_greeter_has_no_module_docstring(self, run_mpm: Any) -> None:
         """Verify greeter sample has no module docstring (matching reference)."""
-        exit_code, output, project = run_mpm("greeter-docstr", "--monorepo", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("greeter-docstr", "--monorepo", "--with-samples", "-y")
 
         assert exit_code == 0
         greeter_init = (project / "libs" / "greeter" / "greeter_docstr" / "greeter" / "__init__.py").read_text()
@@ -705,7 +799,7 @@ class TestBugFixes:
 
     def test_test_files_use_simple_format(self, run_mpm: Any) -> None:
         """Verify test files use simple format (matching reference)."""
-        exit_code, output, project = run_mpm("test-format", "--monorepo", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("test-format", "--monorepo", "--with-samples", "-y")
 
         assert exit_code == 0
         test_file = (project / "libs" / "greeter" / "tests" / "test_greeter_import.py").read_text()
@@ -723,7 +817,7 @@ class TestDockerFileGeneration:
 
     def test_monorepo_with_samples_and_docker_generates_all_docker_files(self, run_mpm: Any) -> None:
         """Monorepo with samples and docker should have all docker files."""
-        exit_code, output, project = run_mpm("docker-full", "--monorepo", "--with-docker", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("docker-full", "--monorepo", "--with-docker", "--with-samples", "-y")
 
         assert exit_code == 0
         assert (project / "docker-compose.yml").exists()
@@ -737,7 +831,7 @@ class TestDockerFileGeneration:
         This is because docker-compose.yml would reference Dockerfiles that don't exist.
         User can add apps with `mpm add app <name> --docker` later.
         """
-        exit_code, output, project = run_mpm("docker-no-samples", "--monorepo", "--with-docker", "-y")
+        exit_code, _output, project = run_mpm("docker-no-samples", "--monorepo", "--with-docker", "-y")
 
         assert exit_code == 0
         # Should have .dockerignore (useful for when user adds apps later)
@@ -750,7 +844,7 @@ class TestDockerFileGeneration:
 
     def test_single_package_with_docker_generates_all_docker_files(self, run_mpm: Any) -> None:
         """Single package with docker should have Dockerfile, compose, and bake."""
-        exit_code, output, project = run_mpm("docker-single-pkg", "--single", "--with-docker", "-y")
+        exit_code, _output, project = run_mpm("docker-single-pkg", "--single", "--with-docker", "-y")
 
         assert exit_code == 0
         assert (project / "Dockerfile").exists()
@@ -760,7 +854,7 @@ class TestDockerFileGeneration:
 
     def test_monorepo_without_docker_no_docker_files(self, run_mpm: Any) -> None:
         """Monorepo without --with-docker should not have any docker files."""
-        exit_code, output, project = run_mpm("no-docker", "--monorepo", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("no-docker", "--monorepo", "--with-samples", "-y")
 
         assert exit_code == 0
         assert not (project / ".dockerignore").exists()
@@ -770,7 +864,7 @@ class TestDockerFileGeneration:
 
     def test_single_package_docker_compose_has_correct_dockerfile_path(self, run_mpm: Any) -> None:
         """Single package docker-compose.yml should reference root Dockerfile."""
-        exit_code, output, project = run_mpm("single-docker-path", "--single", "--with-docker", "-y")
+        exit_code, _output, project = run_mpm("single-docker-path", "--single", "--with-docker", "-y")
 
         assert exit_code == 0
         compose = (project / "docker-compose.yml").read_text()
@@ -780,7 +874,7 @@ class TestDockerFileGeneration:
 
     def test_monorepo_samples_docker_compose_has_correct_dockerfile_path(self, run_mpm: Any) -> None:
         """Monorepo with samples docker-compose.yml should reference apps/printer/Dockerfile."""
-        exit_code, output, project = run_mpm("mono-docker-path", "--monorepo", "--with-docker", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("mono-docker-path", "--monorepo", "--with-docker", "--with-samples", "-y")
 
         assert exit_code == 0
         compose = (project / "docker-compose.yml").read_text()
@@ -788,7 +882,7 @@ class TestDockerFileGeneration:
 
     def test_single_package_docker_bake_targets_app(self, run_mpm: Any) -> None:
         """Single package docker-bake.hcl should have 'app' target, not 'printer'."""
-        exit_code, output, project = run_mpm("single-bake-target", "--single", "--with-docker", "-y")
+        exit_code, _output, project = run_mpm("single-bake-target", "--single", "--with-docker", "-y")
 
         assert exit_code == 0
         bake = (project / "docker-bake.hcl").read_text()
@@ -799,7 +893,7 @@ class TestDockerFileGeneration:
 
     def test_monorepo_samples_docker_bake_targets_printer(self, run_mpm: Any) -> None:
         """Monorepo with samples docker-bake.hcl should have 'printer' target."""
-        exit_code, output, project = run_mpm("mono-bake-target", "--monorepo", "--with-docker", "--with-samples", "-y")
+        exit_code, _output, project = run_mpm("mono-bake-target", "--monorepo", "--with-docker", "--with-samples", "-y")
 
         assert exit_code == 0
         bake = (project / "docker-bake.hcl").read_text()
