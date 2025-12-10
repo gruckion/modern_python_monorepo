@@ -161,4 +161,6 @@ def add_package(
     else:
         generate_app_package(renderer, root, name, namespace, ctx, with_docker=with_docker)
 
-    console.print("\n[dim]Run 'uv sync --all-packages' to update dependencies[/dim]")
+    console.print("\n[bold]Next steps:[/bold]")
+    console.print("  [dim]uv sync --all-packages[/dim]  Install the new package")
+    console.print("  [dim]uv run una sync[/dim]         Auto-detect internal dependencies after adding imports")

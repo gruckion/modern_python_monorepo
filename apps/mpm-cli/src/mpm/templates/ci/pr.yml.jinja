@@ -27,6 +27,16 @@ jobs:
         run: uv sync --all-extras --dev
 {% endif %}
 
+      - name: Cache testmon data
+        uses: actions/cache@v4
+        with:
+          path: .testmondata
+          key: testmon-{% raw %}${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}-${{ github.sha }}{% endraw %}
+
+          restore-keys: |
+            testmon-{% raw %}${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}{% endraw %}-
+            testmon-{% raw %}${{ runner.os }}{% endraw %}-
+
       - name: Check lockfile is up to date
         run: |
 {% if structure is defined and structure.value == "monorepo" %}

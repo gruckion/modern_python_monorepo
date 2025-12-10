@@ -70,19 +70,23 @@ jobs:
           echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
           echo "Building packages: $PACKAGES"
 
+      # Build wheel and sdist separately due to una limitation
+      # See: https://github.com/carderne/una#quickstart
       - name: Build greeter
         if: contains(steps.determine.outputs.packages, 'greeter') || steps.determine.outputs.packages == 'all'
-        run: uv build --package greeter --out-dir dist/
+        run: uv build --package greeter --wheel --out-dir dist/ && uv build --package greeter --sdist --out-dir dist/
 
       - name: Build printer
         if: contains(steps.determine.outputs.packages, 'printer') || steps.determine.outputs.packages == 'all'
-        run: uv build --package printer --out-dir dist/
+        run: uv build --package printer --wheel --out-dir dist/ && uv build --package printer --sdist --out-dir dist/
 
       - name: List built packages
         run: ls -la dist/
 {% else %}
+      # Build wheel and sdist separately due to una limitation
+      # See: https://github.com/carderne/una#quickstart
       - name: Build package
-        run: uv build
+        run: uv build --wheel && uv build --sdist
 {% endif %}
 
       - name: Upload build artifacts

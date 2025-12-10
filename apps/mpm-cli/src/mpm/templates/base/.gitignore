@@ -14,5 +14,9 @@ wheels/
 coverage.xml
 htmlcov/
 
+# pytest-testmon cache
+.testmondata
+.testmondata-journal
+
 # MkDocs documentation build
 site/

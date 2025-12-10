@@ -320,3 +320,88 @@ cd my-lib
 # Add documentation
 mpm add docs
 ```
+
+## Post-Generation Commands
+
+After creating or modifying your project, you'll use these commands:
+
+### Install Dependencies
+
+```bash
+uv sync --all-packages
+```
+
+Run this after:
+
+- Creating a new project
+- Adding packages with `mpm add lib/app`
+- Modifying `pyproject.toml` dependencies
+
+### Sync Internal Dependencies
+
+```bash
+uv run una sync
+```
+
+This scans your code for imports between internal packages and updates dependencies automatically. Run this after:
+
+- Adding a new package
+- Writing imports from one package to another
+- Before building wheels for distribution
+
+**Example workflow:**
+
+```bash
+# Add a new library
+mpm add lib auth
+
+# Install the new package
+uv sync --all-packages
+
+# Write code that imports from another package
+# ... edit apps/api/my_project/api/__init__.py ...
+# from my_project import auth
+
+# Update dependencies automatically
+uv run una sync
+```
+
+### Run Development Tasks
+
+```bash
+uv run poe all           # Format, lint, type check, and test
+uv run poe test          # Run all tests
+uv run poe test:changed  # Run only tests affected by changes (fast!)
+uv run poe check         # Type check only
+uv run poe cov           # Run tests with coverage report
+```
+
+#### Fast Testing with `test:changed`
+
+MPM includes **pytest-testmon** for intelligent test caching. Instead of running all tests, `test:changed` only runs tests affected by your code changes:
+
+```bash
+# First run builds the dependency database
+uv run poe test:changed
+→ 50 tests in 10s
+
+# Subsequent runs skip unchanged tests
+uv run poe test:changed
+→ 0 tests in 0.1s (nothing changed!)
+
+# After editing a file, only affected tests run
+uv run poe test:changed
+→ 3 tests in 0.5s
+```
+
+This is similar to Turborepo's test caching in the JavaScript ecosystem.
+
+**When to use each command:**
+
+| Command | Use Case |
+|---------|----------|
+| `poe test:changed` | Fast feedback during development |
+| `poe test` | Full test run before committing |
+| `poe cov` | Generate coverage reports (CI) |
+
+See [Project Structure](../project-structure.md#development-scripts) for the full task list.

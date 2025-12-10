@@ -355,6 +355,47 @@ All projects include [poethepoet](https://poethepoet.naber.dev/) tasks:
 | `uv run poe docs` | Start local docs server (if --with-docs) |
 | `uv run poe docs:build` | Build static docs (if --with-docs) |
 
+## Development Workflow
+
+### Adding Packages
+
+After creating your project, add new packages with:
+
+```bash
+mpm add lib auth       # Add a library
+mpm add app api        # Add an application
+```
+
+Then install the new package:
+
+```bash
+uv sync --all-packages
+```
+
+### Managing Internal Dependencies
+
+When packages import from each other, use **una sync** to auto-detect and update dependencies:
+
+```bash
+uv run una sync
+```
+
+This scans all imports and updates `project.dependencies` and `tool.uv.sources` in each package's `pyproject.toml`. Run this after:
+
+- Adding a new package
+- Writing new imports between packages
+- Before building wheels for distribution
+
+### Building Wheels
+
+Una's build plugin (`hatch-una`) automatically inlines internal dependencies when building:
+
+```bash
+uvx --from build pyproject-build --installer=uv --outdir=dist --wheel apps/my-app
+```
+
+The resulting wheel is self-contained and ready for deployment.
+
 ## Key Details
 
 - **Monorepo**: `apps/` for applications, `libs/` for libraries

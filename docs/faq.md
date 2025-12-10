@@ -155,11 +155,28 @@ Common questions about MPM CLI.
     The `mpm add` command automates this for you.
 
 ??? question "How do packages depend on each other?"
-    In a package's `pyproject.toml`, add the dependency:
+    When your package imports from another internal package, you have two options:
+
+    **Option 1: Auto-detect with `una sync` (recommended)**
+
+    Simply write your imports, then run:
+
+    ```bash
+    uv run una sync
+    ```
+
+    This scans all packages, detects imports, and automatically updates `project.dependencies` and `tool.uv.sources` in each `pyproject.toml`.
+
+    **Option 2: Manual configuration**
+
+    In a package's `pyproject.toml`, add the dependency manually:
 
     ```toml
     [project]
     dependencies = ["greeter"]  # Name of the lib
+
+    [tool.uv.sources]
+    greeter = { workspace = true }
     ```
 
     Then import using the namespace:
@@ -167,6 +184,19 @@ Common questions about MPM CLI.
     ```python
     from my_project import greeter
     ```
+
+??? question "When should I run `uv run una sync`?"
+    Run `una sync` whenever you:
+
+    - Add a new package with `mpm add lib/app`
+    - Write imports from one internal package to another
+    - Want to verify all dependencies are correctly declared
+
+    ```bash
+    uv run una sync
+    ```
+
+    This command scans your code for imports and ensures they're properly declared as dependencies. It's safe to run frequently—it only updates what's needed.
 
 ## Technology Choices
 
@@ -191,6 +221,23 @@ MPM uses an opinionated, modern Python toolstack. For detailed comparisons and j
     **pytest** has 90%+ adoption in modern Python. It offers simple `assert` syntax (vs verbose `self.assertEqual`), powerful fixtures, and a rich plugin ecosystem (pytest-cov, pytest-xdist, pytest-asyncio).
 
     [Read full comparison →](technology-choices.md#4-testing-pytest)
+
+??? question "How do I speed up test runs during development?"
+    Use `poe test:changed` instead of `poe test`. MPM includes **pytest-testmon** which tracks code dependencies and only runs tests affected by your changes:
+
+    ```bash
+    # First run builds dependency database
+    uv run poe test:changed
+    → 50 tests in 10s
+
+    # After that, only changed tests run
+    uv run poe test:changed
+    → 0 tests in 0.1s (nothing changed!)
+    ```
+
+    This is the Python equivalent of Turborepo's test caching. Use `poe test` for full runs before committing.
+
+    [Read full explanation →](technology-choices.md#pytest-testmon-turborepo-like-test-caching)
 
 ??? question "Why MkDocs instead of Sphinx?"
     **MkDocs** uses Markdown (more widely known than reStructuredText), has beautiful themes (Material, Shadcn), simple YAML config, and fast live reload. mkdocstrings generates API docs from docstrings.

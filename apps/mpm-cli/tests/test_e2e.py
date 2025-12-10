@@ -173,25 +173,32 @@ class TestGeneratedProjectsWork:
         assert result.returncode == 0, f"Tests failed: {result.stdout}\n{result.stderr}"
 
     @pytest.mark.slow
-    @pytest.mark.skip(reason="Una doesn't support building wheels from sdist - known limitation")
     def test_lib_can_be_built(self, run_mpm: Any) -> None:
-        """Test that a generated lib can be built into a wheel."""
+        """Test that a generated lib can be built into a wheel.
+
+        Note: Must use --wheel flag due to una limitation with sdist->wheel builds.
+        See: https://github.com/carderne/una#quickstart
+        """
         exit_code, _output, project = run_mpm("e2e-build-test", "--monorepo", "--with-samples", "-y")
 
         assert exit_code == 0
 
         subprocess.run(["uv", "sync", "--all-packages"], cwd=project, check=True)
 
-        greeter_dir = project / "libs" / "greeter"
+        # Build wheel directly (not via sdist) due to una limitation
+        # Use --package to build from project root, outputs to project dist/
         result = subprocess.run(
-            ["uv", "build"],
-            cwd=greeter_dir,
+            ["uv", "build", "--package", "greeter", "--wheel"],
+            cwd=project,
             capture_output=True,
             text=True,
         )
 
         assert result.returncode == 0, f"Build failed: {result.stderr}"
-        assert (greeter_dir / "dist").is_dir()
+        assert (project / "dist").is_dir()
+        # Verify wheel was created
+        wheel_files = list((project / "dist").glob("*greeter*.whl"))
+        assert len(wheel_files) == 1, f"Expected 1 greeter wheel file, got: {wheel_files}"
 
 
 class TestAddPackageCommand:
@@ -278,9 +285,9 @@ class TestAddPackageCommand:
 
             # Check namespace was read from mpm.toml (project_name: mpm_toml_test)
             lib_dir = project / "libs" / "mylib" / "mpm_toml_test" / "mylib"
-            assert lib_dir.is_dir(), (
-                f"Expected namespace dir mpm_toml_test, got: " f"{list((project / 'libs' / 'mylib').iterdir())}"
-            )
+            assert (
+                lib_dir.is_dir()
+            ), f"Expected namespace dir mpm_toml_test, got: {list((project / 'libs' / 'mylib').iterdir())}"
 
             # Check python version was read from mpm.toml
             lib_pyproject = project / "libs" / "mylib" / "pyproject.toml"

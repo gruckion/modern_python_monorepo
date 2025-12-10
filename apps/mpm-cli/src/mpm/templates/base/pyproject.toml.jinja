@@ -13,6 +13,7 @@ dev = [
     "ty>=0.0.1a6",
     "pytest>=8.0.0",
     "pytest-cov>=6.0.0",
+    "pytest-testmon>=2.1.0",
     "poethepoet>=0.31.0",
 {% if with_docs %}
     # Documentation (MkDocs)
@@ -117,6 +118,7 @@ fmt = "ruff format"
 lint = "ruff check --fix"
 check = "ty check"
 test = "pytest"
+"test:changed" = "pytest --testmon"
 {% if structure.value == "monorepo" %}
 cov = "pytest --cov=apps --cov=libs --cov-report=term-missing --cov-report=xml"
 {% else %}
@@ -127,6 +129,10 @@ all = ["fmt", "lint", "check", "test"]
 # CI versions (no auto-fix, stricter)
 "ci:fmt" = "ruff format --check"
 "ci:lint" = "ruff check"
+
+# Build - must use --wheel and --sdist separately due to una limitation
+# See: https://github.com/carderne/una#quickstart
+build = { shell = "uv build --wheel && uv build --sdist" }
 
 # prek hooks (Rust-based pre-commit alternative)
 hooks = "prek install"

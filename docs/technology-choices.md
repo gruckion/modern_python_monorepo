@@ -9,7 +9,7 @@ This document outlines the opinionated technology choices made for the Modern Py
 | Package/Dependency Manager | **uv** | pip, poetry, pdm, pipenv, pyenv |
 | Linting & Formatting | **Ruff** | black, isort, flake8, pylint, autopep8, yapf |
 | Pre-commit Hooks | **prek** | pre-commit |
-| Testing | **pytest** | unittest, nose, nose2 |
+| Testing | **pytest + pytest-testmon** | unittest, nose, nose2 |
 | Documentation | **MkDocs** | Sphinx, pdoc, pydoc |
 | Type Checking | **ty** | mypy, pyright, pytype, pyre |
 | Project Configuration | **pyproject.toml** | requirements.txt, setup.py, setup.cfg |
@@ -200,6 +200,46 @@ def db_connection():
 - `pytest-mock`: Enhanced mocking
 
 **Monorepo Friendly**: `testpaths = ["apps", "libs"]` discovers tests across workspace.
+
+### pytest-testmon: Turborepo-like Test Caching
+
+MPM includes **pytest-testmon** for intelligent test caching - the Python equivalent of Turborepo's test caching in the JavaScript ecosystem.
+
+**How It Works**: pytest-testmon uses Coverage.py to track which code paths each test executes. It builds a dependency graph stored in `.testmondata`. On subsequent runs, it compares changed files against this graph and only runs tests that could be affected.
+
+**Performance Impact**:
+
+```bash
+# First run - builds dependency database
+uv run poe test:changed
+→ 178 tests in 59s
+
+# Second run - no changes
+uv run poe test:changed
+→ 0 tests in 0.15s (100% skipped!)
+
+# After changing one file
+uv run poe test:changed
+→ 3 tests in 1.2s (only affected tests run)
+```
+
+**Why testmon over alternatives?**
+
+- **pytest-testmon**: Tracks at code-block level using Coverage.py (most precise)
+- **pytest-incremental**: Tracks at module level (less precise, lower overhead)
+- **Pants/Bazel**: Enterprise build systems with test caching (overkill for most projects)
+
+**Trade-offs**:
+
+- Coverage tracking adds ~10-30% overhead to individual test execution
+- May over-select tests when changing shared code (by design - ensures correctness)
+- CI caches `.testmondata` between runs for faster PR feedback
+
+**When to Use**:
+
+- `poe test:changed` - Fast feedback during development
+- `poe test` - Full test run for verification
+- `poe cov` - Full tests with coverage report (CI)
 
 **Why Not the Alternatives?**
 

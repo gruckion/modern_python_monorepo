@@ -563,6 +563,21 @@ class TestBugFixes:
         assert 'hooks = "prek install"' in pyproject
         assert '"hooks:run" = "prek run --all-files"' in pyproject
 
+    def test_pyproject_has_build_task(self, run_mpm: Any) -> None:
+        """Verify pyproject.toml has build task with una workaround.
+
+        See: https://github.com/carderne/una#quickstart
+        """
+        exit_code, _output, project = run_mpm("build-test", "--monorepo", "-y")
+
+        assert exit_code == 0
+        pyproject = (project / "pyproject.toml").read_text()
+        # Check build command uses --wheel and --sdist separately
+        assert "uv build --wheel" in pyproject
+        assert "uv build --sdist" in pyproject
+        # Check the comment references una
+        assert "una limitation" in pyproject
+
     def test_mkdocs_has_edit_uri(self, run_mpm: Any) -> None:
         """Verify mkdocs.yml has edit_uri (A.2 fix)."""
         exit_code, _output, project = run_mpm("edituri-test", "--monorepo", "--with-docs", "-y")
@@ -700,15 +715,21 @@ class TestBugFixes:
         assert "test.pypi.org" in release
 
     def test_release_yml_has_per_package_builds(self, run_mpm: Any) -> None:
-        """Verify release.yml builds packages separately."""
+        """Verify release.yml builds packages separately with --wheel flag.
+
+        See: https://github.com/carderne/una#quickstart
+        """
         exit_code, _output, project = run_mpm(
             "rel-builds", "--monorepo", "--with-ci", "--with-pypi", "--with-samples", "-y"
         )
 
         assert exit_code == 0
         release = (project / ".github" / "workflows" / "release.yml").read_text()
-        assert "uv build --package greeter" in release
-        assert "uv build --package printer" in release
+        # Check builds use --wheel flag due to una limitation
+        assert "uv build --package greeter --wheel" in release
+        assert "uv build --package printer --wheel" in release
+        # Check the comment references una
+        assert "una limitation" in release
 
     # README.md tests
     def test_readme_has_ci_badges(self, run_mpm: Any) -> None:
