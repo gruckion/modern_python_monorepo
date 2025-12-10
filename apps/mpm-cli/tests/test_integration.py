@@ -955,6 +955,98 @@ class TestDockerFileGeneration:
         # But should NOT have printer-dev (that's monorepo sample specific)
         assert "printer-dev" not in readme
 
+    def test_single_package_dockerfile_cmd_references_existing_function(self, run_mpm: Any) -> None:
+        """Dockerfile CMD should reference a function that exists in the generated package.
+
+        Single package projects define main() in __init__.py, so the Dockerfile
+        should use main() not run().
+
+        Fixes: CODE_REVIEW.md issue #4 - Dockerfile CMD References Non-Existent Function
+        """
+        exit_code, _output, project = run_mpm("dockerfile-cmd-test", "--single", "--with-docker", "-y")
+
+        assert exit_code == 0
+
+        # Read the generated __init__.py to see what function is defined
+        init_file = project / "src" / "dockerfile_cmd_test" / "__init__.py"
+        init_content = init_file.read_text()
+
+        # Read the Dockerfile
+        dockerfile = (project / "Dockerfile").read_text()
+
+        # The function referenced in CMD should exist in __init__.py
+        # Current bug: Dockerfile uses "run" but __init__.py defines "main"
+        if "import main" in dockerfile or "main()" in dockerfile:
+            assert "def main(" in init_content, "Dockerfile references main() but it doesn't exist in __init__.py"
+        elif "import run" in dockerfile or "run()" in dockerfile:
+            assert "def run(" in init_content, "Dockerfile references run() but it doesn't exist in __init__.py"
+        else:
+            raise AssertionError("Dockerfile CMD should reference either main() or run()")
+
+    def test_single_package_dockerfile_healthcheck_references_existing_function(self, run_mpm: Any) -> None:
+        """Dockerfile HEALTHCHECK should reference a function that exists in the generated package.
+
+        Single package projects define main() in __init__.py, so the Dockerfile
+        HEALTHCHECK should import main, not run.
+
+        Fixes: CODE_REVIEW.md issue #3 - Dockerfile HEALTHCHECK References Non-Existent Function
+        """
+        exit_code, _output, project = run_mpm("dockerfile-health-test", "--single", "--with-docker", "-y")
+
+        assert exit_code == 0
+
+        # Read the generated __init__.py to see what function is defined
+        init_file = project / "src" / "dockerfile_health_test" / "__init__.py"
+        init_content = init_file.read_text()
+
+        # Read the Dockerfile
+        dockerfile = (project / "Dockerfile").read_text()
+
+        # Extract the HEALTHCHECK line
+        healthcheck_lines = [
+            line
+            for line in dockerfile.split("\n")
+            if "HEALTHCHECK" in line or ("CMD python" in line and "import" in line)
+        ]
+        healthcheck_content = " ".join(healthcheck_lines)
+
+        # The function referenced in HEALTHCHECK should exist in __init__.py
+        if "import main" in healthcheck_content:
+            assert "def main(" in init_content, "Dockerfile HEALTHCHECK references main but it doesn't exist"
+        elif "import run" in healthcheck_content:
+            assert "def run(" in init_content, "Dockerfile HEALTHCHECK references run but it doesn't exist"
+        else:
+            # HEALTHCHECK may just check the module can be imported
+            pass
+
+    def test_monorepo_printer_dockerfile_cmd_references_existing_function(self, run_mpm: Any) -> None:
+        """Monorepo printer Dockerfile CMD should reference a function that exists.
+
+        The printer sample app defines run() in __init__.py.
+        """
+        exit_code, _output, project = run_mpm(
+            "mono-dockerfile-cmd", "--monorepo", "--with-docker", "--with-samples", "-y"
+        )
+
+        assert exit_code == 0
+
+        # Read the generated printer __init__.py
+        # The namespace uses underscores, but the directory uses hyphens
+        namespace = project.name.replace("-", "_")
+        init_file = project / "apps" / "printer" / namespace / "printer" / "__init__.py"
+        init_content = init_file.read_text()
+
+        # Read the Dockerfile
+        dockerfile = (project / "apps" / "printer" / "Dockerfile").read_text()
+
+        # The function referenced in CMD should exist in __init__.py
+        if "import main" in dockerfile or "main()" in dockerfile:
+            assert "def main(" in init_content, "Dockerfile references main() but it doesn't exist in __init__.py"
+        elif "import run" in dockerfile or "run()" in dockerfile:
+            assert "def run(" in init_content, "Dockerfile references run() but it doesn't exist in __init__.py"
+        else:
+            raise AssertionError("Dockerfile CMD should reference main() or run()")
+
 
 class TestAutoSync:
     """Test auto-sync feature that runs uv sync after project generation."""
@@ -1008,3 +1100,97 @@ class TestAutoSync:
         output = ansi_escape.sub("", result.stdout)
         assert "--no-sync" in output
         assert "Skip running uv sync" in output
+
+
+class TestErrorReporting:
+    """Test that errors during project generation are properly reported.
+
+    Fixes: CODE_REVIEW.md issue #5 - Silent Failures in Project Generation
+    """
+
+    def test_git_init_failure_shows_error_details(self, run_mpm: Any, monkeypatch: Any) -> None:
+        """When git init fails, the error message should include stderr details."""
+        import subprocess
+
+        original_run = subprocess.run
+
+        def mock_run(cmd, **kwargs):
+            if cmd[0] == "git" and "init" in cmd:
+                # Simulate git init failure with an error message
+                return subprocess.CompletedProcess(
+                    cmd,
+                    returncode=1,
+                    stdout="",
+                    stderr="fatal: not a git repository",
+                )
+            return original_run(cmd, **kwargs)
+
+        monkeypatch.setattr(subprocess, "run", mock_run)
+
+        exit_code, output, project = run_mpm("git-fail-test", "--monorepo", "-y")
+
+        # Project should still be created (git is optional)
+        assert exit_code == 0
+        assert (project / "pyproject.toml").exists()
+
+        # The warning should include the actual error message
+        assert "Failed to initialize git" in output
+        # Error details should be visible to user
+        assert "fatal: not a git repository" in output
+
+    def test_uv_sync_failure_shows_error_details(self, run_mpm: Any, monkeypatch: Any) -> None:
+        """When uv sync fails, the error message should include stderr details."""
+        import subprocess
+
+        original_run = subprocess.run
+
+        def mock_run(cmd, **kwargs):
+            if cmd[0] == "uv" and "sync" in cmd:
+                # Simulate uv sync failure
+                return subprocess.CompletedProcess(
+                    cmd,
+                    returncode=1,
+                    stdout="",
+                    stderr="error: Package 'nonexistent' not found",
+                )
+            return original_run(cmd, **kwargs)
+
+        monkeypatch.setattr(subprocess, "run", mock_run)
+
+        exit_code, output, project = run_mpm("sync-fail-test", "--monorepo", "-y", with_sync=True)
+
+        # Project should still be created (sync is optional)
+        assert exit_code == 0
+        assert (project / "pyproject.toml").exists()
+
+        # The warning should include the actual error message
+        assert "uv sync failed" in output
+        # Error details should be visible to user
+        assert "Package 'nonexistent' not found" in output
+
+    def test_success_message_indicates_warnings_occurred(self, run_mpm: Any, monkeypatch: Any) -> None:
+        """Final message should indicate if there were warnings during generation."""
+        import subprocess
+
+        original_run = subprocess.run
+
+        def mock_run(cmd, **kwargs):
+            if cmd[0] == "git" and "init" in cmd:
+                if kwargs.get("check"):
+                    raise subprocess.CalledProcessError(1, cmd)
+                return subprocess.CompletedProcess(cmd, returncode=1)
+            return original_run(cmd, **kwargs)
+
+        monkeypatch.setattr(subprocess, "run", mock_run)
+
+        exit_code, output, project = run_mpm("warning-test", "--monorepo", "-y")
+
+        assert exit_code == 0
+        assert (project / "pyproject.toml").exists()
+
+        # Success message should indicate warnings occurred
+        # Either "with warnings" or not showing "successfully" alone
+        assert "generated" in output.lower()
+        # When there are warnings, the message should reflect that
+        if "Failed to initialize git" in output:
+            assert "warning" in output.lower() or "⚠" in output

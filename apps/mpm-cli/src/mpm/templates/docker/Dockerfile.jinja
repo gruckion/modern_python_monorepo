@@ -77,13 +77,13 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 {% if package_name is defined %}
     CMD python -c "from {{ namespace }}.{{ package_name }} import run" || exit 1
 {% else %}
-    CMD python -c "from {{ namespace }} import run" || exit 1
+    CMD python -c "from {{ namespace }} import main" || exit 1
 {% endif %}
 
 {% if package_name is defined %}
-# Run the application
+# Run the application (monorepo apps use run())
 CMD ["python", "-c", "from {{ namespace }}.{{ package_name }} import run; run()"]
 {% else %}
-# Run the application
-CMD ["python", "-c", "from {{ namespace }} import run; run()"]
+# Run the application (single package mode uses main())
+CMD ["python", "-c", "from {{ namespace }} import main; main()"]
 {% endif %}

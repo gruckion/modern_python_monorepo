@@ -67,53 +67,59 @@ Using `datetime.now()` without a timezone creates naive datetime objects. This c
 
 ---
 
-### 3. Bug: Dockerfile HEALTHCHECK References Non-Existent Function
+### 3. ~~Bug: Dockerfile HEALTHCHECK References Non-Existent Function~~ [FIXED]
 
-**File:** `apps/mpm-cli/src/mpm/templates/docker/Dockerfile.jinja:78-81`
+**Status:** RESOLVED
 
-```dockerfile
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-{% if package_name is defined %}
-    CMD python -c "from {{ namespace }}.{{ package_name }} import run" || exit 1
-```
+**File Modified:** `apps/mpm-cli/src/mpm/templates/docker/Dockerfile.jinja`
 
-The healthcheck imports a `run` function, but:
-- Sample packages define `main()`, not `run()`
-- Non-sample packages get empty `__init__.py` templates with no `run` function
+**Solution:** Updated the Dockerfile template to use the correct function name based on project type:
+- Monorepo apps (package_name is defined): use `run()` (defined in `monorepo/apps/__init__.py.jinja`)
+- Single package projects (package_name is NOT defined): use `main()` (defined in `single/__init__.py.jinja`)
 
-**Impact:** Docker healthchecks will fail for all generated projects.
+**Tests Added:**
+- `test_single_package_dockerfile_healthcheck_references_existing_function`
 
 ---
 
-### 4. Bug: Dockerfile CMD References Non-Existent Function
+### 4. ~~Bug: Dockerfile CMD References Non-Existent Function~~ [FIXED]
 
-**File:** `apps/mpm-cli/src/mpm/templates/docker/Dockerfile.jinja:83-89`
+**Status:** RESOLVED
 
-```dockerfile
-CMD ["python", "-c", "from {{ namespace }}.{{ package_name }} import run; run()"]
-```
+**File Modified:** `apps/mpm-cli/src/mpm/templates/docker/Dockerfile.jinja`
 
-Same issue as healthcheck - the `run` function doesn't exist in generated packages.
+**Solution:** Same fix as issue #3. The Dockerfile CMD now correctly references:
+- `run()` for monorepo apps
+- `main()` for single package projects
+
+**Tests Added:**
+- `test_single_package_dockerfile_cmd_references_existing_function`
+- `test_monorepo_printer_dockerfile_cmd_references_existing_function`
 
 ---
 
 ## High Priority Issues
 
-### 5. Silent Failures in Project Generation
+### 5. ~~Silent Failures in Project Generation~~ [FIXED]
 
-**Files:** `apps/mpm-cli/src/mpm/generators/project.py:207-213`, `project.py:216-232`
+**Status:** RESOLVED
 
-```python
-def _init_git(output: Path) -> None:
-    try:
-        subprocess.run(["git", "init"], cwd=output, capture_output=True, check=True)
-    except subprocess.CalledProcessError:
-        console.print("[yellow]⚠[/yellow] Failed to initialize git repository")
-```
+**File Modified:** `apps/mpm-cli/src/mpm/generators/project.py`
 
-When `git init` or `uv sync` fails, the error is swallowed and only a warning is printed. The user might not notice the failure.
+**Solution:** Implemented comprehensive error reporting for `_init_git` and `_run_uv_sync`:
 
-**Consider:** Returning a boolean or raising an exception so the final success message is conditional.
+- Both functions now return `bool` indicating success/failure
+- Error messages include the actual stderr output from failed commands
+- The `generate_project` function tracks warnings and shows a conditional final message:
+  - `"✓ Project generated successfully"` when no warnings
+  - `"⚠ Project generated with warnings"` when git init or uv sync failed
+- Handles `FileNotFoundError` for missing git/uv binaries
+
+**Tests Added:**
+
+- `test_git_init_failure_shows_error_details`
+- `test_uv_sync_failure_shows_error_details`
+- `test_success_message_indicates_warnings_occurred`
 
 ---
 

@@ -54,15 +54,24 @@ def generate_project(config: ProjectConfig, output_path: Path) -> None:
     # Generate VS Code configuration
     _generate_vscode_config(renderer, output_path, context)
 
+    # Track warnings for final status message
+    warnings_occurred = False
+
     # Initialize git
     if config.init_git:
-        _init_git(output_path)
+        if not _init_git(output_path):
+            warnings_occurred = True
 
     # Run uv sync to install dependencies
     if config.auto_sync:
-        _run_uv_sync(output_path, config.structure)
+        if not _run_uv_sync(output_path, config.structure):
+            warnings_occurred = True
 
-    console.print("[green]\u2713[/green] Project generated successfully")
+    # Show appropriate success message
+    if warnings_occurred:
+        console.print("[yellow]⚠[/yellow] Project generated with warnings")
+    else:
+        console.print("[green]✓[/green] Project generated successfully")
 
 
 def _generate_base_files(renderer: TemplateRenderer, output: Path, ctx: dict) -> None:
@@ -204,17 +213,36 @@ def _generate_vscode_config(renderer: TemplateRenderer, output: Path, ctx: dict)
     renderer.render_to_file("vscode/settings.json.jinja", vscode_dir / "settings.json", ctx)
 
 
-def _init_git(output: Path) -> None:
-    """Initialize git repository."""
+def _init_git(output: Path) -> bool:
+    """Initialize git repository.
+
+    Returns:
+        True if git init succeeded, False otherwise.
+    """
     try:
-        subprocess.run(["git", "init"], cwd=output, capture_output=True, check=True)
-        console.print("[green]\u2713[/green] Initialized git repository")
-    except subprocess.CalledProcessError:
-        console.print("[yellow]\u26a0[/yellow] Failed to initialize git repository")
+        result = subprocess.run(["git", "init"], cwd=output, capture_output=True, text=True)
+        if result.returncode == 0:
+            console.print("[green]✓[/green] Initialized git repository")
+            return True
+        else:
+            error_msg = result.stderr.strip() if result.stderr else "Unknown error"
+            console.print(f"[yellow]⚠[/yellow] Failed to initialize git: {error_msg}")
+            return False
+    except FileNotFoundError:
+        console.print("[yellow]⚠[/yellow] Failed to initialize git: git not found")
+        return False
+    except subprocess.CalledProcessError as e:
+        error_msg = e.stderr.strip() if e.stderr else str(e)
+        console.print(f"[yellow]⚠[/yellow] Failed to initialize git: {error_msg}")
+        return False
 
 
-def _run_uv_sync(output: Path, structure: ProjectStructure) -> None:
-    """Run uv sync to install dependencies."""
+def _run_uv_sync(output: Path, structure: ProjectStructure) -> bool:
+    """Run uv sync to install dependencies.
+
+    Returns:
+        True if uv sync succeeded, False otherwise.
+    """
     try:
         # For monorepos, use --all-packages to sync all workspace members
         if structure == ProjectStructure.MONOREPO:
@@ -225,8 +253,12 @@ def _run_uv_sync(output: Path, structure: ProjectStructure) -> None:
         console.print("[dim]Running uv sync...[/dim]")
         result = subprocess.run(cmd, cwd=output, capture_output=True, text=True)
         if result.returncode == 0:
-            console.print("[green]\u2713[/green] Dependencies installed")
+            console.print("[green]✓[/green] Dependencies installed")
+            return True
         else:
-            console.print(f"[yellow]\u26a0[/yellow] uv sync failed: {result.stderr}")
+            error_msg = result.stderr.strip() if result.stderr else "Unknown error"
+            console.print(f"[yellow]⚠[/yellow] uv sync failed: {error_msg}")
+            return False
     except FileNotFoundError:
-        console.print("[yellow]\u26a0[/yellow] uv not found, skipping dependency installation")
+        console.print("[yellow]⚠[/yellow] uv not found, skipping dependency installation")
+        return False
