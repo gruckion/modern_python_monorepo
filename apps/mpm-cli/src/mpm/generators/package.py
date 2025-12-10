@@ -137,11 +137,12 @@ def add_package(
 
     # Require mpm.toml
     mpm_config_path = find_mpm_config(root)
-    if not mpm_config_path:
+    if mpm_config_path is None:
         console.print("[red]Error:[/red] No mpm.toml found. This command requires an mpm-managed project.")
         console.print("[dim]Create a new project with 'mpm new <name>' first.[/dim]")
         sys.exit(1)
 
+    assert mpm_config_path is not None  # type narrowing for static analysis
     mpm_config = load_mpm_config(mpm_config_path)
     namespace = namespace or mpm_config.project_name
     python_version = mpm_config.python_version

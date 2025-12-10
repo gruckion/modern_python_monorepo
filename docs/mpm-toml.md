@@ -135,60 +135,20 @@ Changes are reflected in subsequent `mpm add` commands.
 !!! warning
     Don't change `generation.structure` after creating the project. The file structure won't be modified to match.
 
-## Feature Command Requirements
+## mpm add Commands
 
-| Command | Requires mpm.toml |
-|---------|-------------------|
-| `mpm add lib` | No (backward compatible) |
-| `mpm add app` | No (backward compatible) |
-| `mpm add docker` | **Yes** |
-| `mpm add ci` | **Yes** |
-| `mpm add pypi` | **Yes** |
-| `mpm add docs` | **Yes** |
+All `mpm add` commands require `mpm.toml` to be present. This ensures consistent configuration across your project.
 
-## Backward Compatibility
+| Command | What It Does |
+|---------|--------------|
+| `mpm add lib <name>` | Adds a library package to `libs/` |
+| `mpm add app <name>` | Adds an application package to `apps/` |
+| `mpm add docker` | Adds Docker configuration |
+| `mpm add ci` | Adds GitHub Actions CI workflow |
+| `mpm add pypi` | Adds PyPI publishing workflow |
+| `mpm add docs` | Adds MkDocs documentation |
 
-Projects created before `mpm.toml` was introduced still work:
-
-- **`mpm add lib/app`**: Falls back to reading namespace from `[tool.una]` in `pyproject.toml`
-- **Feature commands**: Require `mpm.toml` - create one manually or regenerate the project
-
-### Creating mpm.toml for Old Projects
-
-If you have an existing project without `mpm.toml`, create one manually:
-
-```toml
-[mpm]
-version = "0.1.0"
-created_at = "2024-01-01T00:00:00"
-
-[project]
-name = "your_project_name"
-slug = "your-project-name"
-description = ""
-
-[generation]
-structure = "monorepo"
-python_version = "3.13"
-license = "MIT"
-
-[features]
-samples = false
-docker = false
-ci = false
-pypi = false
-docs = false
-docs_theme = "material"
-precommit = true
-
-[metadata]
-author_name = ""
-author_email = ""
-github_owner = ""
-github_repo = ""
-```
-
-Adjust values to match your existing setup, then `mpm add` feature commands will work.
+If you're not in an MPM-managed project (no `mpm.toml` found), these commands will fail with a helpful error message.
 
 ## Why TOML?
 

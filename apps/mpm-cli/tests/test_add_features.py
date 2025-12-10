@@ -314,7 +314,7 @@ class TestAddFeaturesRequiresMpmToml:
 
         result = runner.invoke(app, ["add", "docker"])
         assert result.exit_code == 1
-        assert "Not in an mpm project" in result.stdout
+        assert "No mpm.toml found" in result.stdout
 
     def test_add_ci_requires_project(self, temp_dir: Path) -> None:
         """Test that add ci fails outside a project."""
@@ -323,7 +323,7 @@ class TestAddFeaturesRequiresMpmToml:
 
         result = runner.invoke(app, ["add", "ci"])
         assert result.exit_code == 1
-        assert "Not in an mpm project" in result.stdout
+        assert "No mpm.toml found" in result.stdout
 
     def test_add_docker_requires_mpm_toml(self, temp_dir: Path) -> None:
         """Test that add docker fails with workspace pyproject but no mpm.toml."""
