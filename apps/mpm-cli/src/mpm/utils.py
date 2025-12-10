@@ -37,6 +37,117 @@ def is_valid_python_identifier(name: str) -> bool:
     return snake.isidentifier()
 
 
+# Python reserved keywords that cannot be used as project/package names
+PYTHON_KEYWORDS = frozenset(
+    {
+        "False",
+        "None",
+        "True",
+        "and",
+        "as",
+        "assert",
+        "async",
+        "await",
+        "break",
+        "class",
+        "continue",
+        "def",
+        "del",
+        "elif",
+        "else",
+        "except",
+        "finally",
+        "for",
+        "from",
+        "global",
+        "if",
+        "import",
+        "in",
+        "is",
+        "lambda",
+        "nonlocal",
+        "not",
+        "or",
+        "pass",
+        "raise",
+        "return",
+        "try",
+        "while",
+        "with",
+        "yield",
+    }
+)
+
+# Names that would conflict with Python internals
+RESERVED_NAMES = frozenset(
+    {
+        "__init__",
+        "__main__",
+        "__pycache__",
+        "__all__",
+        "__builtins__",
+        "__doc__",
+        "__file__",
+        "__name__",
+        "__package__",
+        "__spec__",
+        "test",
+        "tests",
+        "src",
+        "lib",
+        "libs",
+        "app",
+        "apps",
+        "dist",
+        "build",
+    }
+)
+
+
+def validate_project_name(name: str) -> tuple[bool, str]:
+    """Validate a project or package name.
+
+    Returns:
+        A tuple of (is_valid, error_message).
+        If valid, error_message is empty.
+    """
+    if not name:
+        return False, "Name cannot be empty"
+
+    if len(name) > 100:
+        return False, "Name is too long (max 100 characters)"
+
+    # Check for path traversal attempts
+    if ".." in name or "/" in name or "\\" in name:
+        return False, "Name cannot contain path separators or '..'"
+
+    # Check for spaces
+    if " " in name:
+        return False, "Name cannot contain spaces (use hyphens or underscores)"
+
+    # Check for special characters (only allow alphanumeric, hyphens, underscores)
+    # Allow underscore at start to catch dunder names like __init__ in reserved names check
+    if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_-]*$", name):
+        return False, "Name must start with a letter and contain only letters, numbers, hyphens, or underscores"
+
+    # Convert to snake_case for Python identifier check
+    snake_name = to_snake_case(name)
+
+    # Check if it's a valid Python identifier
+    if not snake_name.isidentifier():
+        return False, f"'{snake_name}' is not a valid Python identifier"
+
+    # Check for Python keywords
+    if snake_name in PYTHON_KEYWORDS or snake_name.lower() in {k.lower() for k in PYTHON_KEYWORDS}:
+        return False, f"'{name}' is a Python reserved keyword"
+
+    # Check for reserved names
+    if snake_name in RESERVED_NAMES or snake_name.lower() in {n.lower() for n in RESERVED_NAMES}:
+        return False, f"'{name}' is a reserved name that may cause conflicts"
+
+    return True, ""
+
+
 def find_mpm_config(start_path: Path | None = None) -> Path | None:
     """Find mpm.toml by walking up directory tree."""
     path = start_path or Path.cwd()

@@ -1,5 +1,6 @@
 """Unit tests for Pydantic configuration models."""
 
+from datetime import UTC
 from pathlib import Path
 
 import pytest
@@ -321,3 +322,122 @@ def test_mpm_config_round_trip(tmp_path: Path) -> None:
     assert loaded.author_email == original.author_email
     assert loaded.github_owner == original.github_owner
     assert loaded.github_repo == original.github_repo
+
+
+# Timezone-aware datetime tests
+
+
+def test_mpm_config_default_created_at_is_timezone_aware() -> None:
+    """Test that MpmConfig default created_at uses timezone-aware UTC datetime."""
+    config = MpmConfig(
+        project_name="my_project",
+        project_slug="my-project",
+    )
+    # Verify created_at is set and is timezone-aware
+    assert config.created_at is not None
+    assert config.created_at.tzinfo is not None
+    assert config.created_at.tzinfo == UTC
+
+
+def test_mpm_config_from_project_config_created_at_is_timezone_aware() -> None:
+    """Test that MpmConfig.from_project_config creates timezone-aware datetime."""
+    project_config = ProjectConfig(
+        project_name="test_project",
+        project_slug="test-project",
+    )
+    mpm_config = MpmConfig.from_project_config(project_config)
+
+    assert mpm_config.created_at is not None
+    assert mpm_config.created_at.tzinfo is not None
+    assert mpm_config.created_at.tzinfo == UTC
+
+
+def test_mpm_config_from_toml_with_timezone_aware_datetime(tmp_path: Path) -> None:
+    """Test loading MpmConfig from TOML with timezone-aware datetime."""
+    mpm_toml = tmp_path / "mpm.toml"
+    # Use ISO format with timezone offset
+    mpm_toml.write_text("""
+[mpm]
+version = "0.2.0"
+created_at = "2024-01-01T12:00:00+00:00"
+
+[project]
+name = "loaded_project"
+slug = "loaded-project"
+""")
+
+    config = MpmConfig.from_toml(mpm_toml)
+
+    assert config.created_at is not None
+    assert config.created_at.tzinfo is not None
+
+
+def test_mpm_config_from_toml_fallback_is_timezone_aware(tmp_path: Path) -> None:
+    """Test that MpmConfig.from_toml fallback for missing created_at is timezone-aware."""
+    mpm_toml = tmp_path / "mpm.toml"
+    # TOML file without created_at field
+    mpm_toml.write_text("""
+[mpm]
+version = "0.2.0"
+
+[project]
+name = "loaded_project"
+slug = "loaded-project"
+""")
+
+    config = MpmConfig.from_toml(mpm_toml)
+
+    assert config.created_at is not None
+    assert config.created_at.tzinfo is not None
+    assert config.created_at.tzinfo == UTC
+
+
+def test_mpm_config_to_toml_dict_created_at_includes_timezone() -> None:
+    """Test that to_toml_dict includes timezone info in created_at ISO string."""
+    config = MpmConfig(
+        project_name="my_project",
+        project_slug="my-project",
+    )
+
+    toml_dict = config.to_toml_dict()
+
+    created_at_str = toml_dict["mpm"]["created_at"]
+    # Verify the ISO string includes timezone offset (+00:00 for UTC)
+    assert "+00:00" in created_at_str or "Z" in created_at_str
+
+
+def test_project_generator_context_created_at_includes_timezone(tmp_path: Path) -> None:
+    """Test that project generator creates timezone-aware created_at in context."""
+    from mpm.generators.project import _generate_base_files
+    from mpm.generators.renderer import TemplateRenderer
+
+    renderer = TemplateRenderer()
+    ctx = {
+        "project_name": "test_project",
+        "project_slug": "test-project",
+        "namespace": "test_project",
+        "structure": "monorepo",
+        "python_version": "3.13",
+        "license_type": "MIT",
+        "with_samples": False,
+        "with_docker": False,
+        "with_ci": False,
+        "with_pypi": False,
+        "with_docs": False,
+        "docs_theme": "material",
+        "with_precommit": False,
+        "author_name": "",
+        "author_email": "",
+        "github_owner": "",
+        "github_repo": "",
+        "project_description": "",
+    }
+
+    _generate_base_files(renderer, tmp_path, ctx)
+
+    # Verify created_at was added to context and includes timezone info
+    assert "created_at" in ctx
+    created_at_str = ctx["created_at"]
+    assert isinstance(created_at_str, str)
+    # Verify the ISO string includes timezone offset
+    assert "+00:00" in created_at_str or "Z" in created_at_str

@@ -9,6 +9,7 @@ from mpm.utils import (
     get_namespace_from_project,
     load_mpm_config,
     save_mpm_config,
+    validate_project_name,
 )
 
 
@@ -194,3 +195,126 @@ def test_save_mpm_config_creates_valid_toml(tmp_path: Path) -> None:
     # Should be able to load without errors
     loaded = load_mpm_config(mpm_toml)
     assert loaded.project_name == original.project_name
+
+
+# ============================================================================
+# validate_project_name tests
+# ============================================================================
+
+
+class TestValidateProjectName:
+    """Tests for the validate_project_name function."""
+
+    def test_valid_names(self) -> None:
+        """Test that valid project names pass validation."""
+        valid_names = [
+            "my_project",
+            "my-project",
+            "myproject",
+            "MyProject",
+            "project123",
+            "a",
+            "abc",
+        ]
+        for name in valid_names:
+            is_valid, error = validate_project_name(name)
+            assert is_valid, f"'{name}' should be valid but got error: {error}"
+
+    def test_empty_name(self) -> None:
+        """Test that empty names are rejected."""
+        is_valid, error = validate_project_name("")
+        assert not is_valid
+        assert "empty" in error.lower()
+
+    def test_name_too_long(self) -> None:
+        """Test that overly long names are rejected."""
+        long_name = "a" * 101
+        is_valid, error = validate_project_name(long_name)
+        assert not is_valid
+        assert "too long" in error.lower()
+
+    def test_path_traversal_rejected(self) -> None:
+        """Test that path traversal attempts are rejected."""
+        dangerous_names = [
+            "../etc/passwd",
+            "..\\windows\\system32",
+            "project/../../../etc",
+            "my/project",
+            "my\\project",
+        ]
+        for name in dangerous_names:
+            is_valid, error = validate_project_name(name)
+            assert not is_valid, f"'{name}' should be rejected"
+            assert "path" in error.lower() or "separator" in error.lower()
+
+    def test_spaces_rejected(self) -> None:
+        """Test that names with spaces are rejected."""
+        is_valid, error = validate_project_name("my project")
+        assert not is_valid
+        assert "space" in error.lower()
+
+    def test_special_characters_rejected(self) -> None:
+        """Test that names with special characters are rejected."""
+        invalid_names = [
+            "project!",
+            "project@name",
+            "project#1",
+            "project$",
+            "project%",
+            "project&",
+            "project*",
+            "project()",
+            "project+",
+            "project=",
+        ]
+        for name in invalid_names:
+            is_valid, error = validate_project_name(name)
+            assert not is_valid, f"'{name}' should be rejected"
+
+    def test_names_starting_with_number_rejected(self) -> None:
+        """Test that names starting with a number are rejected."""
+        is_valid, error = validate_project_name("123project")
+        assert not is_valid
+        assert "start with a letter" in error.lower()
+
+    def test_python_keywords_rejected(self) -> None:
+        """Test that Python keywords are rejected."""
+        keywords = ["class", "import", "from", "def", "return", "if", "while", "for"]
+        for keyword in keywords:
+            is_valid, error = validate_project_name(keyword)
+            assert not is_valid, f"'{keyword}' should be rejected"
+            assert "keyword" in error.lower()
+
+    def test_reserved_names_rejected(self) -> None:
+        """Test that reserved names are rejected."""
+        reserved = ["__init__", "__main__", "test", "tests", "src", "lib", "apps"]
+        for name in reserved:
+            is_valid, error = validate_project_name(name)
+            assert not is_valid, f"'{name}' should be rejected"
+            assert "reserved" in error.lower()
+
+    def test_dunder_names_rejected(self) -> None:
+        """Test that __dunder__ style names are rejected."""
+        is_valid, error = validate_project_name("__init__")
+        assert not is_valid
+
+    def test_case_insensitive_keyword_check(self) -> None:
+        """Test that keyword check is case insensitive."""
+        is_valid, error = validate_project_name("CLASS")
+        assert not is_valid
+        assert "keyword" in error.lower()
+
+    def test_hyphenated_names_valid(self) -> None:
+        """Test that hyphenated names are valid."""
+        is_valid, error = validate_project_name("my-awesome-project")
+        assert is_valid, f"Should be valid but got error: {error}"
+
+    def test_underscored_names_valid(self) -> None:
+        """Test that underscored names are valid."""
+        is_valid, error = validate_project_name("my_awesome_project")
+        assert is_valid, f"Should be valid but got error: {error}"
+
+    def test_mixed_case_valid(self) -> None:
+        """Test that mixed case names are valid."""
+        is_valid, error = validate_project_name("MyAwesomeProject")
+        assert is_valid, f"Should be valid but got error: {error}"

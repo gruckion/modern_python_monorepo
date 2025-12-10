@@ -1,7 +1,7 @@
 """Project generator - creates the full project structure."""
 
 import subprocess
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 from rich.console import Console
@@ -69,7 +69,7 @@ def _generate_base_files(renderer: TemplateRenderer, output: Path, ctx: dict) ->
     """Generate base project files."""
     # Add mpm version and timestamp to context for mpm.toml
     ctx["mpm_version"] = __version__
-    ctx["created_at"] = datetime.now().isoformat()
+    ctx["created_at"] = datetime.now(UTC).isoformat()
 
     # Generate mpm.toml FIRST (stores configuration for future `mpm add` commands)
     renderer.render_to_file("base/mpm.toml.jinja", output / "mpm.toml", ctx)

@@ -10,13 +10,24 @@ from mpm.config import (
     ProjectStructure,
     PythonVersion,
 )
+from mpm.utils import validate_project_name
+
+
+def _validate_name_prompt(name: str) -> bool | str:
+    """Validate project/package name for questionary prompt."""
+    if not name:
+        return "Project name is required"
+    is_valid, error_message = validate_project_name(name)
+    if not is_valid:
+        return error_message
+    return True
 
 
 def prompt_project_name() -> str:
     """Prompt for project name."""
     result = questionary.text(
         "Project name:",
-        validate=lambda x: len(x) > 0 or "Project name is required",
+        validate=_validate_name_prompt,
     ).ask()
     if result is None:
         raise KeyboardInterrupt

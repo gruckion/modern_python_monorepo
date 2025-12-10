@@ -1,10 +1,15 @@
 """Configuration models for MPM CLI."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
 
 from pydantic import BaseModel, Field
+
+
+def _utc_now() -> datetime:
+    """Return current UTC time as timezone-aware datetime."""
+    return datetime.now(UTC)
 
 
 class ProjectStructure(str, Enum):
@@ -85,7 +90,7 @@ class MpmConfig(BaseModel):
 
     # MPM metadata
     version: str = Field(default="0.1.0", description="CLI version that created project")
-    created_at: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = Field(default_factory=_utc_now)
 
     # Project info
     project_name: str = Field(..., description="Python identifier name")
@@ -117,7 +122,7 @@ class MpmConfig(BaseModel):
         """Create MpmConfig from ProjectConfig."""
         return cls(
             version=version,
-            created_at=datetime.now(),
+            created_at=_utc_now(),
             project_name=config.project_name,
             project_slug=config.project_slug,
             project_description=config.project_description,
@@ -148,7 +153,7 @@ class MpmConfig(BaseModel):
         # Flatten nested structure
         return cls(
             version=data.get("mpm", {}).get("version", "0.1.0"),
-            created_at=datetime.fromisoformat(data.get("mpm", {}).get("created_at", datetime.now().isoformat())),
+            created_at=datetime.fromisoformat(data.get("mpm", {}).get("created_at", _utc_now().isoformat())),
             project_name=data.get("project", {}).get("name", ""),
             project_slug=data.get("project", {}).get("slug", ""),
             project_description=data.get("project", {}).get("description", ""),

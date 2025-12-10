@@ -200,3 +200,91 @@ def test_add_app_sets_python_version(cli_runner: CliRunner, temp_dir) -> None:
 
     # It should have a valid version specifier
     assert 'requires-python = ">=3.' in content, f"requires-python should contain a valid version. Content: {content}"
+
+
+# ============================================================================
+# Input validation tests
+# ============================================================================
+
+
+class TestProjectNameValidation:
+    """Tests for project name validation in CLI commands."""
+
+    def test_new_rejects_invalid_project_name_with_spaces(self, cli_runner: CliRunner, temp_dir) -> None:
+        """Test that 'mpm new' rejects project names with spaces."""
+        os.chdir(temp_dir)
+        result = cli_runner.invoke(app, ["new", "my project", "-y"])
+        assert result.exit_code == 1
+        assert "Invalid project name" in result.stdout
+        assert "space" in result.stdout.lower()
+
+    def test_new_rejects_python_keyword(self, cli_runner: CliRunner, temp_dir) -> None:
+        """Test that 'mpm new' rejects Python keywords as project names."""
+        os.chdir(temp_dir)
+        result = cli_runner.invoke(app, ["new", "class", "-y"])
+        assert result.exit_code == 1
+        assert "Invalid project name" in result.stdout
+        assert "keyword" in result.stdout.lower()
+
+    def test_new_rejects_path_traversal(self, cli_runner: CliRunner, temp_dir) -> None:
+        """Test that 'mpm new' rejects path traversal attempts."""
+        os.chdir(temp_dir)
+        result = cli_runner.invoke(app, ["new", "../etc/passwd", "-y"])
+        assert result.exit_code == 1
+        assert "Invalid project name" in result.stdout
+
+    def test_new_rejects_reserved_names(self, cli_runner: CliRunner, temp_dir) -> None:
+        """Test that 'mpm new' rejects reserved names like __init__."""
+        os.chdir(temp_dir)
+        result = cli_runner.invoke(app, ["new", "__init__", "-y"])
+        assert result.exit_code == 1
+        assert "Invalid project name" in result.stdout
+
+    def test_add_lib_rejects_invalid_name(self, cli_runner: CliRunner, temp_dir) -> None:
+        """Test that 'mpm add lib' rejects invalid package names."""
+        os.chdir(temp_dir)
+
+        # First create a valid project
+        result = cli_runner.invoke(app, ["new", "test-project", "--monorepo", "-y"])
+        assert result.exit_code == 0
+
+        # Change to project directory
+        project_dir = temp_dir / "test-project"
+        os.chdir(project_dir)
+
+        # Try to add a library with an invalid name
+        result = cli_runner.invoke(app, ["add", "lib", "import"])
+        assert result.exit_code == 1
+        assert "Invalid package name" in result.stdout
+        assert "keyword" in result.stdout.lower()
+
+    def test_add_app_rejects_invalid_name(self, cli_runner: CliRunner, temp_dir) -> None:
+        """Test that 'mpm add app' rejects invalid package names."""
+        os.chdir(temp_dir)
+
+        # First create a valid project
+        result = cli_runner.invoke(app, ["new", "test-project", "--monorepo", "-y"])
+        assert result.exit_code == 0
+
+        # Change to project directory
+        project_dir = temp_dir / "test-project"
+        os.chdir(project_dir)
+
+        # Try to add an app with an invalid name
+        result = cli_runner.invoke(app, ["add", "app", "123invalid"])
+        assert result.exit_code == 1
+        assert "Invalid package name" in result.stdout
+
+    def test_valid_hyphenated_name_works(self, cli_runner: CliRunner, temp_dir) -> None:
+        """Test that valid hyphenated names work correctly."""
+        os.chdir(temp_dir)
+        result = cli_runner.invoke(app, ["new", "my-awesome-project", "--monorepo", "-y"])
+        assert result.exit_code == 0
+        assert "Project Created" in result.stdout
+
+    def test_valid_underscored_name_works(self, cli_runner: CliRunner, temp_dir) -> None:
+        """Test that valid underscored names work correctly."""
+        os.chdir(temp_dir)
+        result = cli_runner.invoke(app, ["new", "my_awesome_project", "--monorepo", "-y"])
+        assert result.exit_code == 0
+        assert "Project Created" in result.stdout

@@ -11,6 +11,7 @@ from mpm import __version__
 from mpm.config import DocsTheme, LicenseType, ProjectConfig, ProjectStructure, PythonVersion
 from mpm.generators.project import generate_project
 from mpm.prompts import gather_project_config
+from mpm.utils import validate_project_name
 
 app = typer.Typer(
     name="mpm",
@@ -154,6 +155,12 @@ def _create_project(
     yes: bool,
 ) -> None:
     """Internal function to create a project."""
+    # Validate project name
+    is_valid, error_message = validate_project_name(project_name)
+    if not is_valid:
+        console.print(f"[red]Error:[/red] Invalid project name: {error_message}")
+        raise typer.Exit(1)
+
     # Determine structure: --monorepo flag enables monorepo, otherwise single package
     # If both flags specified, monorepo takes precedence (common for monorepo workflows)
     if monorepo:
@@ -225,9 +232,18 @@ def add_interactive(ctx: typer.Context) -> None:
         if package_type is None:
             raise typer.Abort()
 
+        def validate_package_name_prompt(name: str) -> bool | str:
+            """Validate package name for questionary prompt."""
+            if not name:
+                return "Package name is required"
+            is_valid, error_message = validate_project_name(name)
+            if not is_valid:
+                return error_message
+            return True
+
         package_name = questionary.text(
             "Package name:",
-            validate=lambda x: len(x) > 0 or "Package name is required",
+            validate=validate_package_name_prompt,
         ).ask()
         if package_name is None:
             raise typer.Abort()
@@ -268,6 +284,12 @@ def add_lib(
     from mpm.generators.package import add_package
     from mpm.utils import find_project_root, get_namespace_from_project
 
+    # Validate package name
+    is_valid, error_message = validate_project_name(name)
+    if not is_valid:
+        console.print(f"[red]Error:[/red] Invalid package name: {error_message}")
+        raise typer.Exit(1)
+
     project_root = find_project_root()
     if not project_root:
         console.print("[red]Error:[/red] No mpm.toml found. This command requires an mpm-managed project.")
@@ -291,6 +313,12 @@ def add_app_cmd(
     """Add a new application package to apps/."""
     from mpm.generators.package import add_package
     from mpm.utils import find_project_root, get_namespace_from_project
+
+    # Validate package name
+    is_valid, error_message = validate_project_name(name)
+    if not is_valid:
+        console.print(f"[red]Error:[/red] Invalid package name: {error_message}")
+        raise typer.Exit(1)
 
     project_root = find_project_root()
     if not project_root:
