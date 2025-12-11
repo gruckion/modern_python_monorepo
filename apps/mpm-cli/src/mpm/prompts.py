@@ -131,6 +131,20 @@ def prompt_license() -> LicenseType:
     return result
 
 
+def prompt_agents_md() -> bool:
+    """Prompt for AGENTS.md generation."""
+    result = questionary.select(
+        "Include AGENTS.md for AI assistants (Claude Code, etc.)?",
+        choices=[
+            Choice("Yes - Include AGENTS.md and CLAUDE.md (recommended)", True),
+            Choice("No", False),
+        ],
+    ).ask()
+    if result is None:
+        raise KeyboardInterrupt
+    return result
+
+
 def gather_project_config(name: str | None = None) -> ProjectConfig:
     """Gather all configuration via interactive prompts."""
     project_name = name or prompt_project_name()
@@ -142,6 +156,7 @@ def gather_project_config(name: str | None = None) -> ProjectConfig:
     with_samples = prompt_samples() if structure == ProjectStructure.MONOREPO else False
     with_docs, docs_theme = prompt_docs()
     license_type = prompt_license()
+    with_agents_md = prompt_agents_md()
 
     return ProjectConfig(
         project_name=project_name.replace("-", "_"),
@@ -155,5 +170,6 @@ def gather_project_config(name: str | None = None) -> ProjectConfig:
         with_docs=with_docs,
         docs_theme=docs_theme or DocsTheme.MATERIAL,
         with_precommit=features.get("precommit", True),
+        with_agents_md=with_agents_md,
         license_type=license_type,
     )
