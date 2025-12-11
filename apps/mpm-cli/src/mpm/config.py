@@ -53,6 +53,7 @@ class ProjectConfig(BaseModel):
     with_docs: bool = Field(default=False)
     docs_theme: DocsTheme = Field(default=DocsTheme.MATERIAL)
     with_precommit: bool = Field(default=True)
+    with_agents_md: bool = Field(default=True, description="Generate AGENTS.md for AI assistants")
 
     # Git
     init_git: bool = Field(default=True)
@@ -110,6 +111,7 @@ class MpmConfig(BaseModel):
     with_docs: bool = Field(default=False)
     docs_theme: DocsTheme = Field(default=DocsTheme.MATERIAL)
     with_precommit: bool = Field(default=True)
+    with_agents_md: bool = Field(default=True, description="Generate AGENTS.md for AI assistants")
 
     # Metadata
     author_name: str = Field(default="")
@@ -136,6 +138,7 @@ class MpmConfig(BaseModel):
             with_docs=config.with_docs,
             docs_theme=config.docs_theme,
             with_precommit=config.with_precommit,
+            with_agents_md=config.with_agents_md,
             author_name=config.author_name,
             author_email=config.author_email,
             github_owner=config.github_owner,
@@ -167,6 +170,7 @@ class MpmConfig(BaseModel):
             with_docs=data.get("features", {}).get("docs", False),
             docs_theme=DocsTheme(data.get("features", {}).get("docs_theme", "material")),
             with_precommit=data.get("features", {}).get("precommit", True),
+            with_agents_md=data.get("features", {}).get("agents_md", True),
             author_name=data.get("metadata", {}).get("author_name", ""),
             author_email=data.get("metadata", {}).get("author_email", ""),
             github_owner=data.get("metadata", {}).get("github_owner", ""),
@@ -198,6 +202,7 @@ class MpmConfig(BaseModel):
                 "docs": self.with_docs,
                 "docs_theme": self.docs_theme.value,
                 "precommit": self.with_precommit,
+                "agents_md": self.with_agents_md,
             },
             "metadata": {
                 "author_name": self.author_name,

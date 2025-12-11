@@ -42,6 +42,9 @@ def generate_project(config: ProjectConfig, output_path: Path) -> None:
     if config.with_precommit:
         _generate_precommit(renderer, output_path, context)
 
+    if config.with_agents_md:
+        _generate_agents_md(renderer, output_path, context)
+
     if config.with_docker:
         _generate_docker_files(renderer, output_path, context)
 
@@ -137,6 +140,13 @@ def _generate_single_package(renderer: TemplateRenderer, output: Path, ctx: dict
 def _generate_precommit(renderer: TemplateRenderer, output: Path, _ctx: dict) -> None:
     """Generate pre-commit configuration."""
     renderer.copy_static("tooling/.pre-commit-config.yaml", output / ".pre-commit-config.yaml")
+
+
+def _generate_agents_md(renderer: TemplateRenderer, output: Path, ctx: dict) -> None:
+    """Generate AGENTS.md and CLAUDE.md for AI assistants."""
+    renderer.render_to_file("base/AGENTS.md.jinja", output / "AGENTS.md", ctx)
+    renderer.render_to_file("base/CLAUDE.md.jinja", output / "CLAUDE.md", ctx)
+    console.print("[green]\u2713[/green] Generated AGENTS.md and CLAUDE.md")
 
 
 def _generate_docker_files(renderer: TemplateRenderer, output: Path, ctx: dict) -> None:

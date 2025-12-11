@@ -1,0 +1,105 @@
+# AGENTS.md
+
+This file provides guidance to AI assistants (Claude Code, GitHub Copilot, Cursor, etc.) when working with code in this repository.
+
+## Project Overview
+
+A modern Python monorepo template using **uv + Una** architecture. Demonstrates 2025 best practices with reusable libraries in `libs/` and applications in `apps/`, all under the `{{ namespace }}` namespace.
+
+## Commands
+
+All commands use `uv run poe <task>`:
+
+```bash
+# Setup
+uv sync --all-packages              # Install all dependencies
+uv run poe hooks                    # Install git hooks (prek)
+
+# Development
+uv run poe fmt                      # Format code with Ruff
+uv run poe lint                     # Lint with Ruff (auto-fixes)
+uv run poe check                    # Type check with ty
+uv run poe test                     # Run all tests
+uv run poe test:changed             # Run only changed tests (testmon)
+uv run poe cov                      # Run tests with coverage
+uv run poe all                      # fmt, lint, check, test (full validation)
+uv run poe build                    # Build wheels and sdists
+
+# Run applications
+python -m {{ namespace }}.greeter
+python -m {{ namespace }}.printer
+```
+
+**Running a single test file:**
+
+```bash
+uv run pytest apps/printer/tests/test_printer_import.py -v
+uv run pytest libs/greeter/tests/test_greeter_import.py -v
+```
+
+## Architecture
+
+**Monorepo Structure:**
+
+- `libs/` - Reusable libraries (publishable, testable)
+- `apps/` - Applications that consume libraries (have CLI entry points)
+- All packages share the `{{ namespace }}` namespace
+
+**Package Layout:**
+
+```tree
+libs/greeter/
+├── pyproject.toml                    # Package metadata + dependencies
+├── {{ namespace }}/greeter/      # Source code
+└── tests/                            # Colocated tests
+
+apps/printer/
+├── pyproject.toml                    # Depends on greeter via workspace
+├── {{ namespace }}/printer/      # Source code
+└── tests/                            # Colocated tests
+```
+
+**Workspace Wiring:**
+
+- Root `pyproject.toml` contains all tool configs (Ruff, pytest, coverage, ty)
+- Per-package `pyproject.toml` contains only metadata and dependencies
+- Una + hatch-una automatically wire namespace packages at build time
+
+**Dependency Flow:**
+
+- `printer` (app) depends on `greeter` (lib)
+- Workspace dependencies declared as: `{{ project_slug }}-greeter` in pyproject.toml
+
+## Tooling
+
+| Tool | Purpose | Replaces |
+|------|---------|----------|
+| uv | Package management, venv | pip, poetry, venv |
+| Una | Monorepo workspace wiring | - |
+| Ruff | Linting + formatting | black, isort, flake8, pylint |
+| ty | Type checking (Rust-based) | mypy |
+| prek | Git hooks (Rust-based) | pre-commit |
+| pytest-testmon | Smart test caching | - |
+
+## Code Style
+
+- Line length: 120 characters
+- Ruff rules: A, B, E, F, I, N, UP, W, RUF, T100
+- First-party imports: `{{ namespace }}`
+- Python version: >={{ python_version }} required
+
+## Adding New Packages
+
+**New library:**
+
+1. Create `libs/newlib/pyproject.toml` with metadata
+2. Source in `libs/newlib/{{ namespace }}/newlib/`
+3. Tests in `libs/newlib/tests/`
+4. Automatically discovered by workspace
+
+**New app:**
+
+1. Create `apps/newapp/pyproject.toml` with metadata
+2. Add workspace dependency: `{{ project_slug }}-<libname>`
+3. Source in `apps/newapp/{{ namespace }}/newapp/`
+4. Define CLI entry point in `[project.scripts]`
