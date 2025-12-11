@@ -21,20 +21,29 @@ jobs:
         run: uv python install
 
       - name: Install dependencies
+{% if structure is defined and structure.value == "monorepo" %}
         run: uv sync --all-packages --all-extras --dev
+{% else %}
+        run: uv sync --all-extras --dev
+{% endif %}
 
       - name: Cache testmon data
         uses: actions/cache@v4
         with:
           path: .testmondata
-          key: testmon-${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}-${{ github.sha }}
+          key: testmon-{% raw %}${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}-${{ github.sha }}{% endraw %}
+
           restore-keys: |
-            testmon-${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}-
-            testmon-${{ runner.os }}-
+            testmon-{% raw %}${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}{% endraw %}-
+            testmon-{% raw %}${{ runner.os }}{% endraw %}-
 
       - name: Check lockfile is up to date
         run: |
+{% if structure is defined and structure.value == "monorepo" %}
           uv sync --all-packages --all-extras --dev
+{% else %}
+          uv sync --all-extras --dev
+{% endif %}
           if [[ -n $(git diff --stat uv.lock) ]]; then
             echo "uv.lock is out of date. Run 'uv sync' and commit the changes."
             exit 1
@@ -49,8 +58,6 @@ jobs:
         run: uv run poe check
 
       - name: Run tests with coverage
-        env:
-          NO_COLOR: "1"
         run: uv run poe cov
 
       - name: Upload coverage reports to Codecov

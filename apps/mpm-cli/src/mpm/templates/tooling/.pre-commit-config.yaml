@@ -1,0 +1,26 @@
+# prek hooks configuration (Rust-based pre-commit alternative)
+# Install: uv run poe hooks (or: prek install)
+# Run manually: uv run poe hooks:run (or: prek run --all-files)
+# Docs: https://prek.j178.dev/
+
+repos:
+  # Ruff - Linting and Formatting (fast, Rust-based)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.0
+    hooks:
+      - id: ruff
+        args: [--fix, --config=pyproject.toml]
+      - id: ruff-format
+        args: [--config=pyproject.toml]
+
+  # prek built-in hooks (Rust-native, faster, offline-capable)
+  - repo: builtin
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+      - id: detect-private-key

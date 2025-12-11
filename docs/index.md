@@ -1,62 +1,288 @@
-# Modern Python Monorepo
+# Quick Start
 
-A **uv + Una** Python monorepo template with best practices for modern Python development.
+Create production-ready Python monorepo projects in minutes.
 
-[![CI](https://github.com/gruckion/modern_python_monorepo/actions/workflows/pr.yml/badge.svg)](https://github.com/gruckion/modern_python_monorepo/actions/workflows/pr.yml)
-[![codecov](https://codecov.io/gh/gruckion/modern_python_monorepo/branch/main/graph/badge.svg)](https://codecov.io/gh/gruckion/modern_python_monorepo)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+## Philosophy
 
-## What is this?
+- **Roll your own stack**: pick only what you need, nothing extra.
+- **Modern tooling**: Rust-based tools (uv, Ruff, ty, prek) for 10-100x speed.
+- **Production-ready**: CI/CD, Docker, PyPI publishing out of the box.
+- **Free and open source**: forever.
 
-This is a production-ready monorepo template for Python projects that demonstrates how to structure, build, and maintain multiple related Python packages in a single repository. It combines the speed of modern Rust-based tooling with established Python best practices.
+## Get Started
 
-## Key Features
+### Prerequisites
 
-- **Clean separation** between reusable libraries (`libs/`) and runnable applications (`apps/`)
-- **Reproducible builds** via Python wheels using Una for internal dependency bundling
-- **Fast development** with Ruff (linting/formatting), ty (type checking), and pytest
-- **Docker support** with multi-stage builds and BuildKit optimizations
-- **CI/CD ready** with GitHub Actions and PyPI publishing via trusted publishers
+- **Python 3.13+** - [Download from python.org](https://www.python.org/downloads/) or install via `uv python install 3.13`
+- **uv** (recommended) - [Install from astral.sh](https://docs.astral.sh/uv/getting-started/installation/)
+- **Git** (optional) - [Download from git-scm.com](https://git-scm.com/) - if you want to initialize a git repository
 
-## Technology Stack
+### CLI (Interactive)
 
-| Category | Tool | Purpose |
-|----------|------|---------|
-| Package manager | [**uv**](https://docs.astral.sh/uv/) | Fast, Rust-based package management |
-| Monorepo | [**Una**](https://github.com/carderne/una) | Workspace wiring + wheel builds |
-| Python | **3.13+** | Required minimum version |
-| Linting/Formatting | [**Ruff**](https://docs.astral.sh/ruff/) | Replaces black, isort, flake8 |
-| Type checking | [**ty**](https://github.com/astral-sh/ty) | Astral's Rust-based type checker |
-| Testing | [**pytest**](https://docs.pytest.org/) | With doctest support |
-| Task runner | [**poethepoet**](https://poethepoet.naber.dev/) | Simple task definitions |
-| Git hooks | [**prek**](https://prek.j178.dev/) | Rust-based pre-commit (10x faster) |
+=== "uvx"
 
-## Quick Navigation
+    ```bash
+    uvx mpm@latest
+    ```
+
+=== "pipx"
+
+    ```bash
+    pipx run modern-python-monorepo
+    ```
+
+=== "pip"
+
+    ```bash
+    pip install modern-python-monorepo
+    mpm
+    ```
+
+Follow the interactive prompts to choose your project structure, Python version, and optional features.
+
+### Skip Prompts (Defaults)
+
+=== "uvx"
+
+    ```bash
+    uvx mpm@latest my-project --yes
+    ```
+
+=== "pipx"
+
+    ```bash
+    pipx run modern-python-monorepo my-project --yes
+    ```
+
+=== "pip"
+
+    ```bash
+    mpm my-project --yes
+    ```
+
+## Common Setups
+
+### Default Monorepo
+
+A monorepo with sample packages to get you started:
+
+=== "uvx"
+
+    ```bash
+    uvx mpm@latest my-project \
+      --monorepo \
+      --with-samples \
+      --with-ci \
+      -y
+    ```
+
+=== "pipx"
+
+    ```bash
+    pipx run modern-python-monorepo my-project \
+      --monorepo \
+      --with-samples \
+      --with-ci \
+      -y
+    ```
+
+=== "pip"
+
+    ```bash
+    mpm my-project \
+      --monorepo \
+      --with-samples \
+      --with-ci \
+      -y
+    ```
+
+### Minimal Single Package
+
+A single library or application without monorepo overhead:
+
+=== "uvx"
+
+    ```bash
+    uvx mpm@latest my-lib \
+      --single \
+      -y
+    ```
+
+=== "pipx"
+
+    ```bash
+    pipx run modern-python-monorepo my-lib \
+      --single \
+      -y
+    ```
+
+=== "pip"
+
+    ```bash
+    mpm my-lib \
+      --single \
+      -y
+    ```
+
+### Full Production Setup
+
+Everything enabled for a production-ready project:
+
+=== "uvx"
+
+    ```bash
+    uvx mpm@latest my-api \
+      --monorepo \
+      --with-samples \
+      --with-docker \
+      --with-ci \
+      --with-pypi \
+      --with-docs \
+      --docs-theme material \
+      -y
+    ```
+
+=== "pipx"
+
+    ```bash
+    pipx run modern-python-monorepo my-api \
+      --monorepo \
+      --with-samples \
+      --with-docker \
+      --with-ci \
+      --with-pypi \
+      --with-docs \
+      --docs-theme material \
+      -y
+    ```
+
+=== "pip"
+
+    ```bash
+    mpm my-api \
+      --monorepo \
+      --with-samples \
+      --with-docker \
+      --with-ci \
+      --with-pypi \
+      --with-docs \
+      --docs-theme material \
+      -y
+    ```
+
+### Empty Monorepo
+
+A clean monorepo structure without sample packages:
+
+=== "uvx"
+
+    ```bash
+    uvx mpm@latest my-workspace \
+      --monorepo \
+      -y
+    ```
+
+=== "pipx"
+
+    ```bash
+    pipx run modern-python-monorepo my-workspace \
+      --monorepo \
+      -y
+    ```
+
+=== "pip"
+
+    ```bash
+    mpm my-workspace \
+      --monorepo \
+      -y
+    ```
+
+## Flags Cheat Sheet
+
+See the full list in the [CLI Commands](cli/commands.md). Key flags:
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--monorepo` | `-m` | Create monorepo structure (default) |
+| `--single` | `-s` | Create single package structure |
+| `--with-samples` | | Include sample packages |
+| `--with-docker` | | Include Docker configuration |
+| `--with-ci` | | Include GitHub Actions CI |
+| `--with-docs` | | Include MkDocs documentation |
+| `--yes` | `-y` | Accept defaults (non-interactive) |
+
+## Adding Packages
+
+Add new packages to an existing monorepo (see [CLI Commands](cli/commands.md#add) for full details):
+
+=== "uvx"
+
+    ```bash
+    # Interactive
+    uvx mpm@latest add
+
+    # Add a library
+    uvx mpm@latest add lib auth
+
+    # Add an application with Docker
+    uvx mpm@latest add app api --docker
+    ```
+
+=== "pipx"
+
+    ```bash
+    # Interactive
+    pipx run modern-python-monorepo add
+
+    # Add a library
+    pipx run modern-python-monorepo add lib auth
+
+    # Add an application with Docker
+    pipx run modern-python-monorepo add app api --docker
+    ```
+
+=== "pip"
+
+    ```bash
+    # Interactive
+    mpm add
+
+    # Add a library
+    mpm add lib auth
+
+    # Add an application with Docker
+    mpm add app api --docker
+    ```
+
+## Adding Features
+
+Add features to an existing project after creation:
+
+```bash
+cd my-project
+
+# Add Docker configuration
+mpm add docker
+
+# Add GitHub Actions CI
+mpm add ci
+
+# Add PyPI publishing workflow
+mpm add pypi
+
+# Add MkDocs documentation
+mpm add docs --theme material
+```
+
+These commands update your [mpm.toml](mpm-toml.md) configuration file. See [CLI Commands](cli/commands.md#add) for details.
+
+## Next Steps
 
 | Section | Description |
 |---------|-------------|
-| [**Getting Started**](getting-started.md) | Get up and running with the monorepo in minutes |
-| [**Development Setup**](development/setup.md) | Learn about development workflows and environment |
-| [**Commands Reference**](development/commands.md) | All available poe tasks and commands |
-| [**Docker Guide**](development/docker.md) | Build and run containers for production and development |
-| [**Architecture**](architecture/overview.md) | Understand the monorepo structure and design decisions |
-| [**API Reference**](api/index.md) | Auto-generated API documentation from source code |
-| [**Contributing**](contributing.md) | Guidelines for contributing to the project |
-
-## Why This Stack?
-
-### Speed
-
-All tooling is Rust-based where possible. `uv` is 10-100x faster than pip, `ruff` replaces multiple Python linters in milliseconds, and `prek` runs git hooks 10x faster than traditional pre-commit.
-
-### Simplicity
-
-One lockfile (`uv.lock`) for the entire workspace. One configuration file (`pyproject.toml`) for all tool settings. Consistent commands via `poe` tasks.
-
-### Reliability
-
-Deterministic builds with locked dependencies. Type checking catches errors before runtime. Automated CI/CD ensures code quality on every change.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](https://github.com/gruckion/modern_python_monorepo/blob/main/LICENSE) file for details.
+| [**CLI Commands**](cli/commands.md) | Full reference for all CLI commands and options |
+| [**mpm.toml**](mpm-toml.md) | Configuration file schema and usage |
+| [**Project Structure**](project-structure.md) | How monorepo and single package layouts are generated |
+| [**Contributing**](contributing.md) | Dev setup and contribution flow |
+| [**FAQ**](faq.md) | Common questions and troubleshooting |

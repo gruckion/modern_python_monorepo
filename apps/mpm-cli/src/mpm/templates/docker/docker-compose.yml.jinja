@@ -1,0 +1,63 @@
+# Docker Compose with BuildKit optimizations
+# Run with: docker compose build (uses buildx by default in Docker 23+)
+
+services:
+{% if structure is defined and structure.value == "monorepo" %}
+{% if with_samples %}
+  printer:
+    build:
+      context: .
+      dockerfile: apps/printer/Dockerfile
+      # BuildKit cache configuration
+      cache_from:
+        - type=local,src=/tmp/.buildx-cache
+      cache_to:
+        - type=local,dest=/tmp/.buildx-cache-new,mode=max
+    image: {{ project_slug }}/printer:latest
+
+  # Development service with live reload
+  printer-dev:
+    build:
+      context: .
+      dockerfile: apps/printer/Dockerfile
+      target: builder  # Use builder stage (has uv)
+    image: {{ project_slug }}/printer:dev
+    volumes:
+      # Mount source for live development
+      - ./libs/greeter/{{ namespace }}:/app/libs/greeter/{{ namespace }}:ro
+      - ./apps/printer/{{ namespace }}:/app/apps/printer/{{ namespace }}:ro
+    command: ["uv", "run", "python", "-c", "from {{ namespace }}.printer import run; run()"]
+    develop:
+      watch:
+        - action: sync
+          path: ./libs/greeter/{{ namespace }}
+          target: /app/libs/greeter/{{ namespace }}
+          ignore:
+            - __pycache__/
+        - action: sync
+          path: ./apps/printer/{{ namespace }}
+          target: /app/apps/printer/{{ namespace }}
+          ignore:
+            - __pycache__/
+{% else %}
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      cache_from:
+        - type=local,src=/tmp/.buildx-cache
+      cache_to:
+        - type=local,dest=/tmp/.buildx-cache-new,mode=max
+    image: {{ project_slug }}/app:latest
+{% endif %}
+{% else %}
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      cache_from:
+        - type=local,src=/tmp/.buildx-cache
+      cache_to:
+        - type=local,dest=/tmp/.buildx-cache-new,mode=max
+    image: {{ project_slug }}/app:latest
+{% endif %}

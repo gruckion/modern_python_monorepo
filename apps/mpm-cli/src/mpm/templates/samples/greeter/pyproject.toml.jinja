@@ -1,0 +1,26 @@
+[project]
+name = "greeter"
+version = "0.1.0"
+description = "Sample greeting library using cowsay"
+authors = []
+dependencies = ["cowsay-python==1.0.2"]
+requires-python = ">={{ python_version.value if python_version is defined else '3.13' }}"
+dynamic = ["una"]  # needed for hatch-una metadata hook to work
+
+[project.scripts]
+greeter = "{{ namespace }}.greeter:main"
+
+[build-system]
+requires = ["hatchling", "hatch-una"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.uv]
+dev-dependencies = []
+
+[tool.uv.sources]
+
+[tool.hatch.build.hooks.una-build]
+[tool.hatch.metadata.hooks.una-meta]

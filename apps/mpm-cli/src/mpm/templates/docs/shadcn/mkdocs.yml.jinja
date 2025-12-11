@@ -1,8 +1,9 @@
-site_name: MPM - Modern Python Monorepo CLI
-site_description: A CLI tool for scaffolding production-ready Python monorepo projects
-site_url: https://gruckion.github.io/modern_python_monorepo/
-repo_url: https://github.com/gruckion/modern_python_monorepo
-repo_name: gruckion/modern_python_monorepo
+site_name: {{ project_slug }}
+site_description: {{ project_description or "Documentation" }}
+site_url: https://{{ github_owner or 'your-username' }}.github.io/{{ project_slug }}/
+
+repo_name: {{ github_owner or 'your-username' }}/{{ project_slug }}
+repo_url: https://github.com/{{ github_owner or 'your-username' }}/{{ project_slug }}
 edit_uri: edit/main/docs/
 
 theme:
@@ -13,7 +14,7 @@ theme:
     light: shadcn-light
     dark: github-dark
   icon: heroicons:rocket-launch
-  topbar_sections: false
+  topbar_sections: true
   show_datetime: true
 
 plugins:
@@ -32,19 +33,6 @@ plugins:
             docstring_style: google
             members_order: source
             show_signature_annotations: true
-
-nav:
-  - Quick Start: index.md
-  - CLI:
-    - cli/commands.md
-    - cli/options.md
-    - cli/interactive.md
-    - cli/compatibility.md
-  - Project Structure: project-structure.md
-  - mpm.toml: mpm-toml.md
-  - Technology Choices: technology-choices.md
-  - Contributing: contributing.md
-  - Frequently Asked Questions: faq.md
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -67,3 +55,9 @@ markdown_extensions:
       permalink: true
   - footnotes
   - codehilite
+
+# Navigation is auto-generated from docs/ directory structure
+# Add pages to docs/ and they will appear in the nav
+# Or uncomment and customize the nav below:
+# nav:
+#   - Home: index.md

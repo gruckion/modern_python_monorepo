@@ -1,0 +1,89 @@
+# syntax=docker/dockerfile:1.7
+# Multi-stage build with BuildKit cache mounts for efficient builds
+# Reference: https://docs.astral.sh/uv/guides/integration/docker/
+
+# Python version - must match .python-version (sync manually or via CI)
+ARG PYTHON_VERSION={{ python_version.value if python_version is defined else "3.13" }}
+
+# =============================================================================
+# Stage 1: Builder
+# =============================================================================
+FROM python:${PYTHON_VERSION}-slim-bookworm AS builder
+
+# Pin uv version for reproducibility
+COPY --from=ghcr.io/astral-sh/uv:0.5.14 /uv /uvx /bin/
+
+# Configure uv for container builds
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never
+
+WORKDIR /app
+
+# Copy workspace dependency files first (changes less frequently)
+COPY pyproject.toml uv.lock ./
+{% if structure is defined and structure.value == "monorepo" %}
+{% if package_name is defined %}
+# Copy dependency pyproject.toml files for efficient caching
+COPY libs/greeter/pyproject.toml libs/greeter/pyproject.toml
+COPY apps/{{ package_name }}/pyproject.toml apps/{{ package_name }}/pyproject.toml
+{% else %}
+COPY libs/ libs/
+COPY apps/ apps/
+{% endif %}
+{% else %}
+COPY src/ src/
+{% endif %}
+
+# Install dependencies only (cached layer)
+# --mount=type=cache reuses uv's download cache across builds
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-workspace --no-dev
+
+{% if structure is defined and structure.value == "monorepo" %}
+{% if package_name is defined %}
+# Copy source code (changes more frequently)
+COPY libs/greeter/{{ namespace }} libs/greeter/{{ namespace }}
+COPY apps/{{ package_name }}/{{ namespace }} apps/{{ package_name }}/{{ namespace }}
+{% endif %}
+{% endif %}
+
+# Install workspace packages (non-editable for production)
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --no-editable
+
+# =============================================================================
+# Stage 2: Runtime (minimal image)
+# =============================================================================
+FROM python:${PYTHON_VERSION}-slim-bookworm AS runtime
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+WORKDIR /app
+
+# Copy only the virtual environment from builder (no uv, no source needed)
+COPY --from=builder /app/.venv /app/.venv
+
+# Add venv to PATH
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Run as non-root user for security
+RUN useradd --create-home --shell /bin/bash app
+USER app
+
+# Health check verifies Python environment is functional
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+{% if package_name is defined %}
+    CMD python -c "from {{ namespace }}.{{ package_name }} import run" || exit 1
+{% else %}
+    CMD python -c "from {{ namespace }} import main" || exit 1
+{% endif %}
+
+{% if package_name is defined %}
+# Run the application (monorepo apps use run())
+CMD ["python", "-c", "from {{ namespace }}.{{ package_name }} import run; run()"]
+{% else %}
+# Run the application (single package mode uses main())
+CMD ["python", "-c", "from {{ namespace }} import main; main()"]
+{% endif %}

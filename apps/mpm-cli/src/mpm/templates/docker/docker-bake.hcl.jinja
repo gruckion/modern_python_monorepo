@@ -1,0 +1,95 @@
+// Docker Buildx Bake file for parallel multi-platform builds
+// Run with: docker buildx bake
+
+variable "TAG" {
+  default = "latest"
+}
+
+variable "REGISTRY" {
+  default = "ghcr.io/{{ github_owner | default('your-org', true) }}"
+}
+
+// Python version - must match .python-version (sync manually or via CI)
+variable "PYTHON_VERSION" {
+  default = "{{ python_version.value if python_version is defined else '3.13' }}"
+}
+
+{% if structure is defined and structure.value == "monorepo" and with_samples %}
+// Shared settings for all targets
+group "default" {
+  targets = ["printer"]
+}
+
+// Production build
+target "printer" {
+  context    = "."
+  dockerfile = "apps/printer/Dockerfile"
+  tags       = ["${REGISTRY}/{{ project_slug }}-printer:${TAG}"]
+  platforms  = ["linux/amd64", "linux/arm64"]
+  cache-from = ["type=gha"]
+  cache-to   = ["type=gha,mode=max"]
+  args = {
+    PYTHON_VERSION = "${PYTHON_VERSION}"
+  }
+}
+
+// Development build (single platform, faster)
+target "printer-dev" {
+  inherits = ["printer"]
+  target   = "builder"
+  tags     = ["{{ project_slug }}/printer:dev"]
+  platforms = ["linux/amd64"]  // Single platform for speed
+}
+
+// CI build with all optimizations
+target "ci" {
+  inherits = ["printer"]
+  cache-from = [
+    "type=gha",
+    "type=registry,ref=${REGISTRY}/{{ project_slug }}-printer:cache"
+  ]
+  cache-to = [
+    "type=gha,mode=max",
+    "type=registry,ref=${REGISTRY}/{{ project_slug }}-printer:cache,mode=max"
+  ]
+}
+{% else %}
+// Shared settings for all targets
+group "default" {
+  targets = ["app"]
+}
+
+// Production build
+target "app" {
+  context    = "."
+  dockerfile = "Dockerfile"
+  tags       = ["${REGISTRY}/{{ project_slug }}:${TAG}"]
+  platforms  = ["linux/amd64", "linux/arm64"]
+  cache-from = ["type=gha"]
+  cache-to   = ["type=gha,mode=max"]
+  args = {
+    PYTHON_VERSION = "${PYTHON_VERSION}"
+  }
+}
+
+// Development build (single platform, faster)
+target "app-dev" {
+  inherits = ["app"]
+  target   = "builder"
+  tags     = ["{{ project_slug }}:dev"]
+  platforms = ["linux/amd64"]  // Single platform for speed
+}
+
+// CI build with all optimizations
+target "ci" {
+  inherits = ["app"]
+  cache-from = [
+    "type=gha",
+    "type=registry,ref=${REGISTRY}/{{ project_slug }}:cache"
+  ]
+  cache-to = [
+    "type=gha,mode=max",
+    "type=registry,ref=${REGISTRY}/{{ project_slug }}:cache,mode=max"
+  ]
+}
+{% endif %}

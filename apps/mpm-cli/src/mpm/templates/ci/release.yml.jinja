@@ -1,0 +1,138 @@
+name: Release to PyPI
+
+on:
+  push:
+    tags:
+      - "v*.*.*"  # All packages: v0.1.0
+{% if structure is defined and structure.value == "monorepo" and with_samples %}
+      - "greeter-v*.*.*"  # Greeter only: greeter-v0.1.0
+      - "printer-v*.*.*"  # Printer only: printer-v0.1.0
+{% endif %}
+
+  workflow_dispatch:
+    inputs:
+{% if structure is defined and structure.value == "monorepo" and with_samples %}
+      package:
+        description: "Package to publish (greeter, printer, or all)"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - greeter
+          - printer
+{% endif %}
+      test_pypi:
+        description: "Publish to TestPyPI instead of PyPI"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+{% if structure is defined and structure.value == "monorepo" and with_samples %}
+    outputs:
+      packages: {% raw %}${{ steps.determine.outputs.packages }}{% endraw %}
+{% endif %}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.14"
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+{% if structure is defined and structure.value == "monorepo" %}
+        run: uv sync --all-packages --all-extras --dev
+{% else %}
+        run: uv sync --all-extras --dev
+{% endif %}
+
+{% if structure is defined and structure.value == "monorepo" and with_samples %}
+      - name: Determine packages to build
+        id: determine
+        run: |
+          if [[ "{% raw %}${{ github.event_name }}{% endraw %}" == "workflow_dispatch" ]]; then
+            PACKAGES="{% raw %}${{ github.event.inputs.package }}{% endraw %}"
+          elif [[ "{% raw %}${{ github.ref_name }}{% endraw %}" == greeter-v* ]]; then
+            PACKAGES="greeter"
+          elif [[ "{% raw %}${{ github.ref_name }}{% endraw %}" == printer-v* ]]; then
+            PACKAGES="printer"
+          else
+            PACKAGES="all"
+          fi
+          echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
+          echo "Building packages: $PACKAGES"
+
+      # Build wheel and sdist separately due to una limitation
+      # See: https://github.com/carderne/una#quickstart
+      - name: Build greeter
+        if: contains(steps.determine.outputs.packages, 'greeter') || steps.determine.outputs.packages == 'all'
+        run: uv build --package greeter --wheel --out-dir dist/ && uv build --package greeter --sdist --out-dir dist/
+
+      - name: Build printer
+        if: contains(steps.determine.outputs.packages, 'printer') || steps.determine.outputs.packages == 'all'
+        run: uv build --package printer --wheel --out-dir dist/ && uv build --package printer --sdist --out-dir dist/
+
+      - name: List built packages
+        run: ls -la dist/
+{% else %}
+      # Build wheel and sdist separately due to una limitation
+      # See: https://github.com/carderne/una#quickstart
+      - name: Build package
+        run: uv build --wheel && uv build --sdist
+{% endif %}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  test-pypi:
+    needs: build
+    if: github.event.inputs.test_pypi == 'true'
+    runs-on: ubuntu-latest
+    environment: test-pypi
+    permissions:
+      id-token: write  # Required for trusted publishing
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          verbose: true
+
+  pypi:
+    needs: build
+    if: github.event.inputs.test_pypi != 'true'
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # Required for trusted publishing
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true

@@ -135,9 +135,6 @@ uv run poe ci:lint  # Lint without fixes
 This project uses [MkDocs](https://www.mkdocs.org/) with the [shadcn theme](https://github.com/asiffer/mkdocs-shadcn) for documentation, and [mkdocstrings](https://mkdocstrings.github.io/) for auto-generated API docs.
 
 ```bash
-# Install docs dependencies
-uv sync --group docs
-
 # Start local docs server (http://127.0.0.1:8000)
 uv run poe docs
 

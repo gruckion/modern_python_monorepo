@@ -1,215 +1,180 @@
 # Contributing
 
-Thank you for considering contributing to the Modern Python Monorepo! This document provides guidelines and instructions for contributing.
+How to set up your environment and contribute changes.
 
-## Getting Started
+!!! warning "Important"
+    Before starting work on any new features or major changes, **please open an issue first to discuss your proposal and get approval.** We don't want you to waste time on work that might not align with the project's direction or get merged.
 
-1. **Fork the repository** on GitHub
-2. **Clone your fork** locally:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/modern_python_monorepo.git
-   cd modern_python_monorepo
-   ```
-3. **Set up the development environment**:
-   ```bash
-   uv sync --all-packages
-   uv run poe hooks
-   ```
+## Overview
 
-## Development Workflow
+This project is a monorepo with the MPM CLI tool:
 
-### 1. Create a Branch
+- **CLI**: `apps/mpm-cli/`
+- **Documentation**: `docs/`
 
-Create a branch for your changes:
+## Setup
+
+### Prerequisites
+
+- Python 3.13+
+- uv
+- Git
+
+### Install
 
 ```bash
-git checkout -b feature/your-feature-name
-git checkout -b fix/your-bug-fix
+git clone https://github.com/gruckion/modern_python_monorepo.git
+cd modern_python_monorepo
+uv sync --all-packages
 ```
 
-### 2. Make Changes
-
-Write your code following the project conventions:
-
-- Use type hints for all functions
-- Write docstrings in Google style
-- Add tests for new functionality
-- Keep changes focused and atomic
-
-### 3. Run Checks
-
-Before committing, run all checks:
+## Develop the CLI
 
 ```bash
+cd apps/mpm-cli
+
+# Run the CLI directly
+uv run mpm --help
+
+# Or install globally for testing anywhere
+uv tool install -e .
+```
+
+Now you can run `mpm` from anywhere on your system to test your changes.
+
+### Testing Changes
+
+Create a test project to verify your changes work:
+
+```bash
+# Create a temp directory
+cd /tmp
+mkdir mpm-test && cd mpm-test
+
+# Run your local CLI
+mpm my-test-project --monorepo --with-samples -y
+
+# Verify the generated project works
+cd my-test-project
+uv sync --all-packages
 uv run poe all
 ```
 
-This runs:
+## Develop the Docs
 
-- **fmt**: Code formatting with Ruff
-- **lint**: Linting with Ruff (auto-fixes issues)
-- **check**: Type checking with ty
-- **test**: Tests with pytest
+```bash
+# From repo root
+uv sync --all-packages --group docs
 
-### 4. Commit Changes
+# Start local docs server
+uv run poe docs
+```
 
-Commit with a descriptive message:
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000) to preview documentation changes.
+
+## Contribution Flow
+
+1. Open an issue/discussion before starting major work
+2. Fork the repository
+3. Create a feature branch
+4. Make changes following existing code style
+5. Update docs as needed
+6. Test and format
+
+```bash
+# Run all checks
+uv run poe all
+
+# Or run individually
+uv run poe fmt      # Format code
+uv run poe lint     # Lint code
+uv run poe check    # Type check
+uv run poe test     # Run tests
+uv run poe cov      # Run tests with coverage
+```
+
+7. Commit and push
 
 ```bash
 git add .
-git commit -m "feat: add new greeting style option"
+git commit -m "feat(cli): add new feature"
+git push origin your-branch
 ```
 
-Git hooks will automatically run checks before the commit is accepted.
+8. Open a Pull Request and link any related issues
 
-#### Commit Message Format
+## Commit Conventions
 
-We follow [Conventional Commits](https://www.conventionalcommits.org/):
+Use [Conventional Commits](https://www.conventionalcommits.org/) with the appropriate scope:
 
 | Prefix | Use Case |
 |--------|----------|
-| `feat:` | New feature |
-| `fix:` | Bug fix |
-| `docs:` | Documentation changes |
-| `style:` | Code style changes (formatting, etc.) |
+| `feat(cli):` | New CLI feature |
+| `fix(cli):` | CLI bug fix |
+| `feat(docs):` | New documentation |
+| `fix(docs):` | Documentation fix |
+| `chore:` | Maintenance tasks |
 | `refactor:` | Code refactoring |
 | `test:` | Adding or updating tests |
-| `chore:` | Maintenance tasks |
 
-### 5. Push and Create PR
+Examples:
 
 ```bash
-git push origin feature/your-feature-name
+git commit -m "feat(cli): add --with-precommit flag"
+git commit -m "fix(cli): handle spaces in project names"
+git commit -m "docs: update project structure examples"
+git commit -m "chore: update dependencies"
 ```
 
-Then create a Pull Request on GitHub.
-
 ## Code Style
-
-### Python
 
 - **Line length**: 120 characters maximum
 - **Formatting**: Handled automatically by Ruff
 - **Imports**: Sorted automatically by Ruff (isort rules)
 - **Type hints**: Required for all public functions
-
-### Docstrings
-
-Use Google-style docstrings:
+- **Docstrings**: Google style
 
 ```python
-def greet(message: str = "Hello!") -> str:
-    """Generate a greeting message.
+def generate_project(config: ProjectConfig, output_path: Path) -> None:
+    """Generate a new project from configuration.
 
     Args:
-        message: The message to display.
+        config: Project configuration options.
+        output_path: Directory to create the project in.
 
-    Returns:
-        A string containing the formatted greeting.
-
-    Example:
-        >>> greet("Hi")
-        'Hi'
+    Raises:
+        FileExistsError: If the output directory already exists.
     """
-    return message
+    ...
 ```
 
-### Testing
+## Testing
 
-- Place tests in `tests/` directory within each package
-- Name test files `test_*.py`
-- Name test functions `test_*`
-- Use pytest fixtures for shared setup
-- Include doctest examples in docstrings when helpful
+Tests are located in `apps/mpm-cli/tests/`:
 
-Example test:
+```bash
+# Run all tests
+uv run poe test
 
-```python
-def test_greet_default_message():
-    """Test greet with default message."""
-    result = greet()
-    assert "Hello" in result
+# Run with coverage
+uv run poe cov
 
+# Run specific test file
+uv run pytest apps/mpm-cli/tests/test_cli.py -v
 
-def test_greet_custom_message():
-    """Test greet with custom message."""
-    result = greet("Custom")
-    assert "Custom" in result
+# Run specific test
+uv run pytest apps/mpm-cli/tests/test_cli.py::test_create_monorepo -v
 ```
 
-## Adding New Packages
+### Test Categories
 
-### New Library
+- **Unit tests**: Test individual functions and classes
+- **Integration tests**: Test CLI commands with various flag combinations
+- **E2E tests**: Test that generated projects actually work
 
-1. Create the directory structure:
-   ```bash
-   mkdir -p libs/mylib/modern_python_monorepo/mylib
-   touch libs/mylib/modern_python_monorepo/mylib/__init__.py
-   touch libs/mylib/modern_python_monorepo/mylib/py.typed
-   ```
+## Help
 
-2. Create `libs/mylib/pyproject.toml`:
-   ```toml
-   [project]
-   name = "mylib"
-   version = "0.1.0"
-   dependencies = []
-   requires-python = ">=3.13"
-   dynamic = ["una"]
+- **Issues**: [GitHub Issues](https://github.com/gruckion/modern_python_monorepo/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/gruckion/modern_python_monorepo/discussions)
 
-   [build-system]
-   requires = ["hatchling", "hatch-una"]
-   build-backend = "hatchling.build"
-
-   [tool.hatch.build.hooks.una-build]
-   [tool.hatch.metadata.hooks.una-meta]
-   ```
-
-3. Sync the workspace:
-   ```bash
-   uv sync --all-packages
-   ```
-
-### New Application
-
-Follow the same pattern under `apps/`, and add a `Dockerfile` if containerization is needed.
-
-## Pull Request Guidelines
-
-### Before Submitting
-
-- [ ] All checks pass (`uv run poe all`)
-- [ ] Tests cover new functionality
-- [ ] Documentation is updated if needed
-- [ ] Commit messages follow conventions
-
-### PR Description
-
-Include in your PR description:
-
-- **What**: Brief description of changes
-- **Why**: Motivation for the changes
-- **How**: Technical approach (if complex)
-- **Testing**: How to test the changes
-
-### Review Process
-
-1. CI checks must pass
-2. At least one maintainer review required
-3. Address review feedback
-4. Squash and merge when approved
-
-## Reporting Issues
-
-When reporting issues, please include:
-
-- Python version (`python --version`)
-- uv version (`uv --version`)
-- Operating system
-- Steps to reproduce
-- Expected vs actual behavior
-- Error messages or logs
-
-## Questions?
-
-Feel free to open an issue for questions or join discussions on GitHub.
+See the full contributor guide in the repository: `.github/CONTRIBUTING.md`.
